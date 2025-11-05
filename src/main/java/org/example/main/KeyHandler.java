@@ -7,6 +7,7 @@ import org.example.commands.MoveDownCommand;
 import org.example.commands.MoveLeftCommand;
 import org.example.commands.MoveRightCommand;
 import org.example.commands.MoveUpCommand;
+import org.example.commands.AltCastSpellCommand;
 import java.awt.event.KeyAdapter;
 
 public class KeyHandler extends KeyAdapter {
@@ -17,15 +18,16 @@ public class KeyHandler extends KeyAdapter {
     private final Command moveDownCommand = new MoveDownCommand();
     private final Command moveLeftCommand = new MoveLeftCommand();
     private final Command moveRightCommand = new MoveRightCommand();
+    private final Command altCastSpellCommand = new AltCastSpellCommand();
     private final Controls keyboard;
     private final Controls controller;
     private final GamePanel gp;
     public boolean upPressed, downPressed, leftPressed, rightPressed;
-    public boolean enterPressed, shotKeyPressed, spacePressed;
+    public boolean enterPressed, shotKeyPressed, altShotKeyPressed, spacePressed;
     private boolean prevPause, prevCharacter, prevMap, prevEscape;
     private boolean prevLeft, prevRight;
     private boolean prevUp, prevDown, prevEnter;
-    private boolean prevShot, prevSpace;
+    private boolean prevShot, prevAltShot, prevSpace;
     public boolean showDebugText = false;
     public boolean godModeOn = false;
 
@@ -51,6 +53,7 @@ public class KeyHandler extends KeyAdapter {
 
         enterPressed = keyboard.isEnterPressed() || controller.isEnterPressed();
         shotKeyPressed = keyboard.isShotPressed() || controller.isShotPressed();
+        altShotKeyPressed = keyboard.isAltShotPressed() || controller.isAltShotPressed();
         spacePressed = keyboard.isSpacePressed() || controller.isSpacePressed();
 
         boolean pausePressed = keyboard.isPausePressed() || controller.isPausePressed();
@@ -84,6 +87,7 @@ public class KeyHandler extends KeyAdapter {
         prevRight = rightPressed;
         prevEnter = enterPressed;
         prevShot = shotKeyPressed;
+        prevAltShot = altShotKeyPressed;
         prevSpace = spacePressed;
         prevPause = pausePressed;
         prevCharacter = characterPressed;
@@ -173,6 +177,10 @@ public class KeyHandler extends KeyAdapter {
         if (justPressed(shotKeyPressed, prevShot)) {
             castSpellCommand.execute(gp.player);
         }
+        if (justPressed(altShotKeyPressed, prevAltShot)) {
+            altCastSpellCommand.execute(gp.player);
+        }
+
     }
 
     private void handlePauseInput() {

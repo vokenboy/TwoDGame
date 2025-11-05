@@ -8,7 +8,7 @@ public class ControllerAdapter implements Controls {
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
     private boolean pausePressed, characterPressed, mapPressed, escapePressed;
-    private boolean enterPressed, shotPressed, spacePressed;
+    private boolean enterPressed, shotPressed, altShotPressed, spacePressed;
 
     private Controller controller;
     private static final float DEADZONE = 0.3f;
@@ -98,6 +98,8 @@ public class ControllerAdapter implements Controls {
     public boolean isEnterPressed() { return enterPressed; }
     @Override
     public boolean isShotPressed() { return shotPressed; }
+    @Override
+    public boolean isAltShotPressed() { return altShotPressed; }
     @Override
     public boolean isSpacePressed() { return spacePressed; }
     @Override

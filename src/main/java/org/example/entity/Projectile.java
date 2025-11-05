@@ -2,7 +2,7 @@ package org.example.entity;
 
 import org.example.main.GamePanel;
 
-public class Projectile extends Entity{
+public class Projectile extends Entity implements Cloneable {
 
     Entity user;
 
@@ -11,6 +11,17 @@ public class Projectile extends Entity{
 
     }
 
+    @Override
+    public Projectile clone() {
+        try {
+            Projectile copy = (Projectile) super.clone();
+            deepCopy(copy);
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     public void set(int worldX, int worldY, String direction, boolean alive, Entity user)
     {
         this.worldX = worldX;

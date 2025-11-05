@@ -27,6 +27,11 @@ public class OBJ_Fireball extends Projectile {
         getImage();
 
     }
+
+    @Override
+    public OBJ_Fireball clone() {
+        return (OBJ_Fireball) super.clone();
+    }
     public void getImage()
     {
         up1 = setup("/projectile/fireball_up_1", gp.tileSize,gp.tileSize);

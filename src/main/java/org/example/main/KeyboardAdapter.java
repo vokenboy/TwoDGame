@@ -8,7 +8,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
     private boolean upPressed, downPressed, leftPressed, rightPressed;
     private boolean pausePressed, characterPressed, mapPressed, escapePressed;
 
-    private boolean enterPressed, shotPressed, spacePressed;
+    private boolean enterPressed, shotPressed, altShotPressed, spacePressed;
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -21,6 +21,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_D -> rightPressed = true;
             case KeyEvent.VK_ENTER -> enterPressed = true;
             case KeyEvent.VK_F -> shotPressed = true;
+            case KeyEvent.VK_G -> altShotPressed = true;
             case KeyEvent.VK_SPACE -> spacePressed = true;
             case KeyEvent.VK_P -> pausePressed = true;
             case KeyEvent.VK_C -> characterPressed = true;
@@ -40,6 +41,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_D -> rightPressed = false;
             case KeyEvent.VK_ENTER -> enterPressed = false;
             case KeyEvent.VK_F -> shotPressed = false;
+            case KeyEvent.VK_G -> altShotPressed = false;
             case KeyEvent.VK_SPACE -> spacePressed = false;
             case KeyEvent.VK_P -> pausePressed = false;
             case KeyEvent.VK_C -> characterPressed = false;
@@ -62,6 +64,12 @@ public class KeyboardAdapter implements Controls, KeyListener {
     public boolean isEnterPressed() { return enterPressed; }
     @Override
     public boolean isShotPressed() { return shotPressed; }
+
+    @Override
+    public boolean isAltShotPressed() {
+        return altShotPressed;
+    }
+
     @Override
     public boolean isSpacePressed() { return spacePressed; }
     @Override
@@ -76,9 +84,10 @@ public class KeyboardAdapter implements Controls, KeyListener {
 
     @Override
     public void update() {}
+
     public void resetKeys() {
         upPressed = downPressed = leftPressed = rightPressed = false;
-        enterPressed = shotPressed = spacePressed = false;
+        enterPressed = shotPressed = altShotPressed = spacePressed = false; // ✅ reset all
     }
 }
 

@@ -15,12 +15,14 @@ import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
 
 
-public class GamePanel extends JPanel implements Runnable{
+public class GamePanel extends JPanel implements Runnable {
     //SCREEN SETTINGS
+    public List<DamageNumber> damageNumbers = new ArrayList<>();
     final int originalTileSize = 16; // 16*16  tile. default
     final int scale = 3; // 16*3 scale
 
@@ -257,6 +259,18 @@ public class GamePanel extends JPanel implements Runnable{
                 }
             }
 
+            // DAMAGE NUMBERS
+            for (int i = 0; i < damageNumbers.size(); i++) {
+                DamageNumber dn = damageNumbers.get(i);
+                if (dn != null) {
+                    dn.update();
+                    if (!dn.alive) {
+                        damageNumbers.remove(i);
+                        i--;
+                    }
+                }
+            }
+
             //PARTICLE
             for(int i = 0; i < particleList.size(); i++)
             {
@@ -366,6 +380,11 @@ public class GamePanel extends JPanel implements Runnable{
                 {
                     entityList.add(projectile[currentMap][i]);
                 }
+            }
+
+            // DAMAGE NUMBERS
+            for (DamageNumber dn : damageNumbers) {
+                dn.draw(g2, this);
             }
 
             //PARTICLES

@@ -7,6 +7,7 @@ public interface Controls {
     boolean isRightPressed();
     boolean isEnterPressed();
     boolean isShotPressed();
+    boolean isAltShotPressed();
     boolean isSpacePressed();
     boolean isPausePressed();
     boolean isCharacterPressed();
