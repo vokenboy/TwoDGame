@@ -237,54 +237,34 @@ public class AssetSetter {
         }
     }
 
-    public void setInteractiveTile()
-    {
+    public void setInteractiveTile() {
         int mapNum = 0;
         int i = 0;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,27,12);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,28,12);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,29,12);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,30,12);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,32,12);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,33,12);i++;
 
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,18,40);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,17,40);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,16,40);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,15,40);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,14,40);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,13,40);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,10,40);i++;
-
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,13,41);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,12,41);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,11,41);i++;
-        gp.iTile[mapNum][i] = new IT_DryTree(gp,10,41);i++;
+        int[][] dryTreePositions = {
+                {27,12},{28,12},{29,12},{30,12},{32,12},{33,12},
+                {18,40},{17,40},{16,40},{15,40},{14,40},{13,40},{10,40},
+                {13,41},{12,41},{11,41},{10,41}
+        };
+        for (int[] pos : dryTreePositions) {
+            gp.iTile[mapNum][i++] = gp.iTileFactory.createTile("DryTree", pos[0], pos[1]);
+        }
 
         mapNum = 2;
         i = 0;
+        int[][] destructibleWallPositions = {
+                {18,30},{17,31},{17,32},{17,34},{18,34},{10,33},{10,22},
+                {38,24},{38,18},{38,19},{38,21},{18,13},{18,14},{22,28},{30,28},{32,28}
+        };
+        for (int[] pos : destructibleWallPositions) {
+            gp.iTile[mapNum][i++] = gp.iTileFactory.createTile("DestructibleWall", pos[0], pos[1]);
+        }
 
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,18,30);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,17,31);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,17,32);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,17,34);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,18,34);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,10,33);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,10,22);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,38,24);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,38,18);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,38,19);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,38,21);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,18,13);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,18,14);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,22,28);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,30,28);i++;
-        gp.iTile[mapNum][i] = new IT_DestructibleWall(gp,32,28);i++;
-
-        gp.iTile[mapNum][i] = new IT_MetalPlate(gp,20,22);i++;
-        gp.iTile[mapNum][i] = new IT_MetalPlate(gp,8,17);i++;
-        gp.iTile[mapNum][i] = new IT_MetalPlate(gp,39,31);i++;
-
-
+        int[][] metalPlatePositions = {
+                {20,22},{8,17},{39,31}
+        };
+        for (int[] pos : metalPlatePositions) {
+            gp.iTile[mapNum][i++] = gp.iTileFactory.createTile("MetalPlate", pos[0], pos[1]);
+        }
     }
 }
