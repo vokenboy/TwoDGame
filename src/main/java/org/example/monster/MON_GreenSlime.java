@@ -5,10 +5,11 @@ import org.example.main.GamePanel;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
+import org.example.object.OBJ_Rock;
 
 import java.util.Random;
 
-public class MON_GreenSlime extends Entity {
+public class MON_GreenSlime extends MON_Slime {
 
     GamePanel gp; // cuz of different package
     public MON_GreenSlime(GamePanel gp) {
@@ -49,6 +50,12 @@ public class MON_GreenSlime extends Entity {
         right1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
         right2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
     }
+
+    @Override
+    public void getAttackImage() {
+
+    }
+
     public void setAction()
     {
         if(onPath == true)
@@ -96,5 +103,10 @@ public class MON_GreenSlime extends Entity {
         {
             dropItem(new OBJ_ManaCrystal(gp));
         }
+    }
+
+    @Override
+    public void setDialogue() {
+
     }
 }

@@ -9,7 +9,7 @@ import org.example.object.OBJ_Rock;
 
 import java.util.Random;
 
-public class MON_RedSlime extends Entity {
+public class MON_RedSlime extends MON_Slime {
 
     GamePanel gp; // cuz of different package
     public MON_RedSlime(GamePanel gp) {
@@ -50,6 +50,12 @@ public class MON_RedSlime extends Entity {
         right1 = setup("/monster/redslime_down_1",gp.tileSize,gp.tileSize);
         right2 = setup("/monster/redslime_down_2",gp.tileSize,gp.tileSize);
     }
+
+    @Override
+    public void getAttackImage() {
+
+    }
+
     public void setAction()
     {
         if(onPath == true)
@@ -97,5 +103,10 @@ public class MON_RedSlime extends Entity {
         {
             dropItem(new OBJ_ManaCrystal(gp));
         }
+    }
+
+    @Override
+    public void setDialogue() {
+
     }
 }

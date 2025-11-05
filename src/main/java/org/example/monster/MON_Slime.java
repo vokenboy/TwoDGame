@@ -2,11 +2,11 @@ package org.example.monster;
 
 import org.example.main.GamePanel;
 
-public abstract class MON_Bat extends Monster {
-    public MON_Bat(GamePanel gp) {
+public abstract class MON_Slime extends Monster {
+    public MON_Slime(GamePanel gp) {
         super(gp);
-        name = "Bat";
-        defaultSpeed = 4;
+        name = "Slime";
+        defaultSpeed = 2;
         defense = 0;
         type = type_monster;
     }
