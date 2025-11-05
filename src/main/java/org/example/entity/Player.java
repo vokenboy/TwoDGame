@@ -3,10 +3,12 @@ package org.example.entity;
 import org.example.main.GamePanel;
 import org.example.main.KeyHandler;
 import org.example.object.*;
+import org.example.main.PlayerObserver;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class Player extends Entity {
@@ -17,6 +19,9 @@ public class Player extends Entity {
     int standCounter = 0;
     public boolean attackCanceled = false;
     public boolean lightUpdated = false;
+
+    private List<PlayerObserver> observers = new ArrayList<>();
+
 
     public Player(GamePanel gp, KeyHandler keyH)
     {
@@ -40,6 +45,37 @@ public class Player extends Entity {
         setDefaultValues(); // when u create Player object, initialize with default values
     }
 
+    public void addObserver(PlayerObserver observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(PlayerObserver observer) {
+        observers.remove(observer);
+    }
+
+    private void notifyHealthChange() {
+        for (PlayerObserver o : observers) {
+            o.onHealthChange(this);
+        }
+    }
+
+    private void notifyManaChange() {
+        for (PlayerObserver o : observers) {
+            o.onManaChange(this);
+        }
+    }
+
+    private void notifyLevelUp() {
+        for (PlayerObserver o : observers) {
+            o.onLevelUp(this);
+        }
+    }
+
+    private void notifyMonsterDamaged(Entity monster, int damage) {
+        for (PlayerObserver o : observers) {
+            o.onMonsterDamaged(monster, damage);
+        }
+    }
     public void setDefaultValues()
     {
         //Default Starting Positions
@@ -414,30 +450,43 @@ public class Player extends Entity {
         }
 
         //PROJECTILE SHOOTING
-        if(gp.keyH.shotKeyPressed == true && projectile.alive == false && shotAvailableCounter == 30 && projectile.haveResource(this) == true)   //2nd Condition : You can shoot it only one at a time
-        {                                                                                               //3rd Condition : If you close shot monster, projectile.alive will be false. So if you still pressing F key, immediately shoot another fireball.
-            // SET DEFAULT COORDINATES, DIRECTION AND USER
-            projectile.set(worldX,worldY,direction,true,this);
+        if(gp.keyH.shotKeyPressed && shotAvailableCounter == 30 && projectile.haveResource(this)) {
+            Projectile newProjectile = projectile.clone(); // clone prototype
+            newProjectile.set(worldX, worldY, direction, true, this);
+            newProjectile.subtractResource(this);
 
-            // SUBTRACT THE COST(MANA,AMMO ETC.)
-            projectile.subtractResource(this);
-
-            // ADD IT TO THE LIST
-            //gp.projectileList.add(projectile);
-
-            //CHECK VACANCY
-            for(int i = 0; i < gp.projectile[1].length; i++)
-            {
-                if(gp.projectile[gp.currentMap][i] == null)
-                {
-                    gp.projectile[gp.currentMap][i] = projectile;
+            for (int i = 0; i < gp.projectile[1].length; i++) {
+                if (gp.projectile[gp.currentMap][i] == null) {
+                    gp.projectile[gp.currentMap][i] = newProjectile;
                     break;
                 }
             }
 
-            shotAvailableCounter = 0; //reset
-
+            shotAvailableCounter = 0;
             gp.playSE(10);
+            notifyManaChange();
+        }
+
+        if(gp.keyH.altShotKeyPressed && shotAvailableCounter == 30 && projectile.haveResource(this)) {
+            Projectile bigProjectile = projectile.clone();
+
+            bigProjectile.solidArea.width = 100;
+            bigProjectile.solidArea.height = 100;
+            bigProjectile.attack = 1;
+
+            bigProjectile.set(worldX, worldY, direction, true, this);
+            bigProjectile.subtractResource(this);
+
+            for (int i = 0; i < gp.projectile[1].length; i++) {
+                if (gp.projectile[gp.currentMap][i] == null) {
+                    gp.projectile[gp.currentMap][i] = bigProjectile;
+                    break;
+                }
+            }
+
+            shotAvailableCounter = 0;
+            gp.playSE(10);
+            notifyManaChange();
         }
 
         //This needs to be outside of key if statement! // If player receive damage from monster, player's gonna be invincible for a second
@@ -476,6 +525,28 @@ public class Player extends Entity {
         }
     }
 
+    public void castAltSpell() {
+        if (projectile == null || !projectile.alive || shotAvailableCounter == 30) {
+            if (projectile.haveResource(this)) {
+                Projectile bigProjectile = projectile.clone();
+                bigProjectile.solidArea.width = 100;
+                bigProjectile.solidArea.height = 100;
+                bigProjectile.attack = this.attack * 2;
+                bigProjectile.set(worldX, worldY, direction, true, this);
+                bigProjectile.subtractResource(this);
+
+                for (int i = 0; i < gp.projectile[1].length; i++) {
+                    if (gp.projectile[gp.currentMap][i] == null) {
+                        gp.projectile[gp.currentMap][i] = bigProjectile;
+                        gp.playSE(10);
+                        break;
+                    }
+                }
+
+                shotAvailableCounter = 0;
+            }
+        }
+    }
 
     public void pickUpObject(int i)
     {
@@ -547,43 +618,50 @@ public class Player extends Entity {
             }
         }
     }
-    public void damageMonster(int i, Entity attacker, int attack, int knockBackPower)
-    {
-        if(i != 999)
-        {
-            if(gp.monster[gp.currentMap][i].invincible == false)
-            {
-                gp.playSE(5);   //hitmonster.wav
+    public void damageMonster(int i, Entity attacker, int attack, int knockBackPower) {
+        if (i != 999) {
+            Entity target = gp.monster[gp.currentMap][i];
 
-                if(knockBackPower > 0)
-                {
-                    setKnockBack(gp.monster[gp.currentMap][i], attacker, knockBackPower);
+            if (!target.invincible) {
+                gp.playSE(5); // hitmonster.wav
+
+                // Apply knockback if available
+                if (knockBackPower > 0) {
+                    setKnockBack(target, attacker, knockBackPower);
                 }
-                if(gp.monster[gp.currentMap][i].offBalance == true)
-                {
+
+                // Double damage if monster is off-balance
+                if (target.offBalance) {
                     attack *= 2;
                 }
-                int damage = attack - gp.monster[gp.currentMap][i].defense;
-                if(damage <= 0 )
-                {
-                    damage = 1;
-                }
-                gp.monster[gp.currentMap][i].life -= damage;
-                gp.ui.addMessage(damage + " damage!");
-                gp.monster[gp.currentMap][i].invincible = true;
-                gp.monster[gp.currentMap][i].damageReaction();  //run away from player
 
-                if(gp.monster[gp.currentMap][i].life <= 0)
-                {
-                    gp.monster[gp.currentMap][i].dying = true;
-                    gp.ui.addMessage("Killed the " + gp.monster[gp.currentMap][i].name + "!");
-                    gp.ui.addMessage("Exp +" + gp.monster[gp.currentMap][i].exp + "!");
-                    exp += gp.monster[gp.currentMap][i].exp;
+                // Calculate damage
+                int damage = attack - target.defense;
+                if (damage < 1) damage = 1;
+
+                // ✅ Use the takeDamage() method from Entity
+                target.takeDamage(damage);
+
+                // Optional: floating UI message (keep if you like your log)
+                gp.ui.addMessage(damage + " damage!");
+
+                target.damageReaction();
+
+                // Notify observers (if you use PlayerObserver)
+                notifyMonsterDamaged(target, damage);
+
+                // Handle death
+                if (target.life <= 0 && !target.dying) {
+                    target.dying = true;
+                    gp.ui.addMessage("Killed the " + target.name + "!");
+                    gp.ui.addMessage("Exp +" + target.exp + "!");
+                    exp += target.exp;
                     checkLevelUp();
                 }
             }
         }
     }
+
     public void damageInteractiveTile(int i)
     {
         if(i != 999 && gp.iTile[gp.currentMap][i].destructible == true && gp.iTile[gp.currentMap][i].isCorrectItem(this) == true && gp.iTile[gp.currentMap][i].invincible == false)

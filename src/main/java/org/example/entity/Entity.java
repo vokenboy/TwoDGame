@@ -1,5 +1,6 @@
 package org.example.entity;
 
+import org.example.main.DamageNumber;
 import org.example.main.GamePanel;
 import org.example.main.UtilityTool;
 
@@ -116,7 +117,12 @@ public class Entity {
     public Entity(GamePanel gp)
     {
         this.gp = gp;
+    }
 
+    protected Entity deepCopy(Entity source) {
+        source.solidArea = new Rectangle(source.solidArea);
+        source.attackArea = new Rectangle(source.attackArea);
+        return source;
     }
     public int getScreenX()
     {
@@ -631,11 +637,13 @@ public class Entity {
                 int monsterIndex = gp.cChecker.checkEntity(this,gp.monster);
                 gp.player.damageMonster(monsterIndex, this, attack, currentWeapon.knockBackPower);
 
+
                 int iTileIndex = gp.cChecker.checkEntity(this, gp.iTile);
                 gp.player.damageInteractiveTile(iTileIndex);
 
                 int projectileIndex = gp.cChecker.checkEntity(this, gp.projectile);
                 gp.player.damageProjectile(projectileIndex);
+
             }
 
             //After checking collision, restore the original data
@@ -651,54 +659,58 @@ public class Entity {
             attacking = false;
         }
     }
-    public void damagePlayer(int attack)
-    {
-        if(gp.player.invincible == false)
-        {
+    public void damagePlayer(int attack) {
+        if (!gp.player.invincible) {
             int damage = attack - gp.player.defense;
-            //Get an opposite direction of this attacker
             String canGuardDirection = getOppositeDirection(direction);
 
-            if(gp.player.guarding == true && gp.player.direction.equals(canGuardDirection))
-            {
-                //Parry //If you press guard key less then 10 frames before the attack you receive 0 damage, and you get critical chance
-                if(gp.player.guardCounter < 10)
-                {
+            if (gp.player.guarding && gp.player.direction.equals(canGuardDirection)) {
+                if (gp.player.guardCounter < 10) {
                     damage = 0;
                     gp.playSE(16);
-                    setKnockBack(this, gp.player, knockBackPower); //Knockback attacker //You can use shield's knockBackPower!
+                    setKnockBack(this, gp.player, knockBackPower);
                     offBalance = true;
-                    spriteCounter =- 60; //Attacker's sprites returns to motion1//like a stun effect
-                }
-                else
-                {
-                    //Normal Guard
+                    spriteCounter -= 60;
+                } else {
                     damage /= 2;
                     gp.playSE(15);
                 }
+            } else {
+                gp.playSE(6);
+                if (damage < 1) damage = 1;
             }
-            else
-            {
-                //Not guarding
-                gp.playSE(6);   //receivedamage.wav
-                if(damage < 1 )
-                {
-                    damage = 1;
-                }
-            }
-            if(damage != 0)
-            {
+
+            if (damage != 0) {
                 gp.player.transparent = true;
                 setKnockBack(gp.player, this, knockBackPower);
             }
 
-            //We can give damage
             gp.player.life -= damage;
             gp.player.invincible = true;
+
+            gp.damageNumbers.add(
+                    new DamageNumber(damage, gp.player.worldX, gp.player.worldY - gp.tileSize / 2)
+            );
         }
     }
-    public void setKnockBack(Entity target, Entity attacker, int knockBackPower)
-    {
+    public void takeDamage(int damage) {
+        if (!invincible && alive) {
+            if (damage < 1) damage = 1;
+            life -= damage;
+            invincible = true;
+
+            gp.damageNumbers.add(
+                    new DamageNumber(damage, worldX, worldY - gp.tileSize / 2)
+            );
+
+            if (life <= 0) {
+                dying = true;
+                life = 0;
+            }
+        }
+    }
+
+    public void setKnockBack(Entity target, Entity attacker, int knockBackPower) {
         this.attacker = attacker;
         target.knockBackDirection = attacker.direction;
         target.speed += knockBackPower;
