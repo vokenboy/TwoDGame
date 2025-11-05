@@ -454,6 +454,11 @@ public class Player extends Entity {
             Projectile newProjectile = projectile.clone(); // clone prototype
             newProjectile.set(worldX, worldY, direction, true, this);
             newProjectile.subtractResource(this);
+            System.out.println("Original projectile: " + System.identityHashCode(projectile));
+            System.out.println("New projectile clone: " + System.identityHashCode(newProjectile));
+            System.out.println("Original projectile attack area: " + System.identityHashCode(projectile.attackArea));
+            System.out.println("New projectile clone attack area: " + System.identityHashCode(newProjectile.attackArea));
+
 
             for (int i = 0; i < gp.projectile[1].length; i++) {
                 if (gp.projectile[gp.currentMap][i] == null) {
@@ -461,7 +466,6 @@ public class Player extends Entity {
                     break;
                 }
             }
-
             shotAvailableCounter = 0;
             gp.playSE(10);
             notifyManaChange();

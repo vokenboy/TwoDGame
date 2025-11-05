@@ -125,18 +125,23 @@ public class MON_SkeletonLord extends Entity {
         }
         if(getTileDistance(gp.player) < 10)
         {
-            moveTowardPlayer(60);
-        }
+            if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
+                setMovementStrategy(new org.example.entity.PathfindingStrategy());
+            }        }
         else
         {
-            getRandomDirection(120);
+            if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
+                setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
+            }
         }
+        performMove();
 
         //Check if it is attacks
         if(attacking == false)
         {
             checkAttackOrNot(60, gp.tileSize*7, gp.tileSize*5); //Small rate = More agressive
         }
+
     }
 
     public void damageReaction() {

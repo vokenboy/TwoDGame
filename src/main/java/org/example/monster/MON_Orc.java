@@ -63,31 +63,27 @@ public class MON_Orc extends Entity {
         attackRight1 = setup("/monster/orc_attack_right_1",gp.tileSize * 2, gp.tileSize);
         attackRight2 = setup("/monster/orc_attack_right_2",gp.tileSize * 2, gp.tileSize);
     }
-    public void setAction()
-    {
-        if(onPath == true)
-        {
-            //Check if it stops chasing
-            checkStopChasingOrNot(gp.player,15,100);
+    @Override
+    public void setAction() {
 
-            //Search the direction to go
-            searchPath(getGoalCol(gp.player), getGoalRow(gp.player));
-        }
-        else
-        {
-            //Check if it starts chasing
-            checkStartChasingOrNot(gp.player, 5, 100);
-
-            //Get a random direction
-            getRandomDirection(120);
+        // If no strategy is assigned yet, set ChasePlayerStrategy
+        if (!(getMovementStrategy() instanceof org.example.entity.ChasePlayerStrategy)) {
+            // Parameters: chaseDistance, stopDistance, rate, randomInterval
+            // Example: chaseDistance=5 tiles, stopDistance=15 tiles, rate=100, randomInterval=120
+            setMovementStrategy(new org.example.entity.ChasePlayerStrategy(5, 15, 100, 120));
         }
 
-        //Check if it is attacks
-        if(attacking == false)
-        {
-            checkAttackOrNot(30, gp.tileSize*4, gp.tileSize); //Small rate = More agressive
+        // Perform movement according to the strategy
+        performMove();
+
+        // Attack logic (only if not already attacking)
+        if (!attacking) {
+            checkAttackOrNot(30, gp.tileSize * 4, gp.tileSize);
         }
     }
+
+
+
 
     public void damageReaction() {
         actionLockCounter = 0;

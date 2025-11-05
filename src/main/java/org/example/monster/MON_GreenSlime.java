@@ -6,7 +6,7 @@ import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
 import org.example.object.OBJ_Rock;
-
+import org.example.entity.MovementStrategy;
 import java.util.Random;
 
 public class MON_GreenSlime extends MON_Slime {
@@ -56,28 +56,20 @@ public class MON_GreenSlime extends MON_Slime {
 
     }
 
-    public void setAction()
-    {
-        if(onPath == true)
-        {
-
-            //Check if it stops chasing
-            checkStopChasingOrNot(gp.player,15,100);
-
-            //Search the direction to go
-            searchPath(getGoalCol(gp.player), getGoalRow(gp.player));
-
-            //Check if it shoots a projectile
-            //checkShootOrNot(200, 30); //Just added to red slimes
-        }
-        else
-        {
-            //Check if it starts chasing
+    public void setAction() {
+        if (onPath) {
+            checkStopChasingOrNot(gp.player, 15, 100);
+            if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
+                setMovementStrategy(new org.example.entity.PathfindingStrategy());
+            }
+        } else {
             checkStartChasingOrNot(gp.player, 5, 100);
-
-            //Get a random direction
-            getRandomDirection(120);
+            if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
+                setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
+            }
         }
+
+        performMove();
     }
 
     public void damageReaction() {
