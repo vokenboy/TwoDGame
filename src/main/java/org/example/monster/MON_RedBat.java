@@ -53,17 +53,22 @@ public class MON_RedBat extends MON_Bat {
         // No special attack image yet
     }
 
-    @Override
     public void setAction() {
         if (onPath) {
-            checkStopChasingOrNot(gp.player, 20, 100);
-            searchPath(getGoalCol(gp.player), getGoalRow(gp.player));
-            checkShootOrNot(150, 40);
+            checkStopChasingOrNot(gp.player, 15, 100);
+            if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
+                setMovementStrategy(new org.example.entity.PathfindingStrategy());
+            }
         } else {
-            checkStartChasingOrNot(gp.player, 6, 80);
-            getRandomDirection(60);
+            checkStartChasingOrNot(gp.player, 5, 100);
+            if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
+                setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
+            }
         }
+
+        performMove();
     }
+
 
     @Override
     public void damageReaction() {
