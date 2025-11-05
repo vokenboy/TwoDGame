@@ -56,29 +56,22 @@ public class MON_RedSlime extends MON_Slime {
 
     }
 
-    public void setAction()
-    {
-        if(onPath == true)
-        {
-
-            //Check if it stops chasing
-            checkStopChasingOrNot(gp.player,15,100);
-
-            //Search the direction to go
-            searchPath(getGoalCol(gp.player), getGoalRow(gp.player));
-
-            //Check if it shoots a projectile
-            checkShootOrNot(200, 30);
-        }
-        else
-        {
-            //Check if it starts chasing
+    public void setAction() {
+        if (onPath) {
+            checkStopChasingOrNot(gp.player, 15, 100);
+            if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
+                setMovementStrategy(new org.example.entity.PathfindingStrategy());
+            }
+        } else {
             checkStartChasingOrNot(gp.player, 5, 100);
-
-            //Get a random direction
-            getRandomDirection(120);
+            if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
+                setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
+            }
         }
+
+        performMove();
     }
+
 
     public void damageReaction() {
         actionLockCounter = 0;
