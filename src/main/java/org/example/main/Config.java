@@ -6,9 +6,16 @@ import java.io.*;
 
 public class Config {
     GamePanel gp;
-    public Config(GamePanel gp)
-    {
+    private static Config instance;
+
+    private Config(GamePanel gp) {
         this.gp = gp;
+    }
+    public static Config getInstance(GamePanel gp) {
+        if (instance == null) {
+            instance = new Config(gp);
+        }
+        return instance;
     }
 
     public void saveConfig()
