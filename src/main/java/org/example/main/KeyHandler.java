@@ -104,12 +104,12 @@ public class KeyHandler extends KeyAdapter {
             if (up) {
                 gp.ui.commandNum--;
                 if (gp.ui.commandNum < 0) gp.ui.commandNum = 2;
-                gp.playSE(9);
+                gp.gameFacade.playSoundEffect(9);
             }
             if (down) {
                 gp.ui.commandNum++;
                 if (gp.ui.commandNum > 2) gp.ui.commandNum = 0;
-                gp.playSE(9);
+                gp.gameFacade.playSoundEffect(9);
             }
 
             if (enter) {
@@ -118,7 +118,7 @@ public class KeyHandler extends KeyAdapter {
                     case 1 -> {
                         gp.saveLoad.load();
                         gp.gameState = gp.playState;
-                        gp.playMusic(0);
+                        gp.gameFacade.playSoundEffect(0);
                     }
                     case 2 -> System.exit(0);
                 }
@@ -131,12 +131,12 @@ public class KeyHandler extends KeyAdapter {
             if (up) {
                 gp.ui.commandNum--;
                 if (gp.ui.commandNum < 0) gp.ui.commandNum = maxClasses;
-                gp.playSE(9);
+                gp.gameFacade.playSoundEffect(9);
             }
             if (down) {
                 gp.ui.commandNum++;
                 if (gp.ui.commandNum > maxClasses) gp.ui.commandNum = 0;
-                gp.playSE(9);
+                gp.gameFacade.playSoundEffect(9);
             }
 
             if (enter) {
@@ -150,7 +150,7 @@ public class KeyHandler extends KeyAdapter {
                     }
                 }
                 gp.gameState = gp.playState;
-                gp.playMusic(0);
+                gp.gameFacade.playSoundEffect(0);
             }
         }
     }
@@ -207,23 +207,23 @@ public class KeyHandler extends KeyAdapter {
 
         if (up && gp.ui.playerSlotRow > 0) {
             gp.ui.playerSlotRow--;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
         if (down && gp.ui.playerSlotRow < 3) {
             gp.ui.playerSlotRow++;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
         if (left && gp.ui.playerSlotCol > 0) {
             gp.ui.playerSlotCol--;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
         if (right && gp.ui.playerSlotCol < 4) {
             gp.ui.playerSlotCol++;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
         if (enter) {
             gp.player.selectItem();
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
         if (character) gp.gameState = gp.playState;
     }
@@ -242,12 +242,12 @@ public class KeyHandler extends KeyAdapter {
         if (up) {
             gp.ui.commandNum--;
             if (gp.ui.commandNum < 0) gp.ui.commandNum = maxOptions;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
         if (down) {
             gp.ui.commandNum++;
             if (gp.ui.commandNum > maxOptions) gp.ui.commandNum = 0;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
 
         int selected = gp.ui.commandNum;
@@ -255,22 +255,22 @@ public class KeyHandler extends KeyAdapter {
         if (enter && selected == 0) {
             gp.fullScreenOn = !gp.fullScreenOn;
             gp.config.saveConfig();
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
 
         if (enter && selected == 3) {
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(22);
         }
 
         if (enter && selected == 4) {
             gp.gameState = gp.titleState;
-            gp.stopMusic();
-            gp.playSE(9);
+            gp.gameFacade.stopBackgroundMusic();
+            gp.gameFacade.playSoundEffect(9);
         }
 
         if ((enter && selected == 5) || escape) {
             gp.gameState = gp.playState;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
     }
 
@@ -282,12 +282,12 @@ public class KeyHandler extends KeyAdapter {
         if (up) {
             gp.ui.commandNum--;
             if (gp.ui.commandNum < 0) gp.ui.commandNum = 1;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(9);
         }
         if (down) {
             gp.ui.commandNum++;
             if (gp.ui.commandNum > 1) gp.ui.commandNum = 0;
-            gp.playSE(9);
+            gp.gameFacade.playSoundEffect(22);
         }
 
         if (enter) {
@@ -295,8 +295,7 @@ public class KeyHandler extends KeyAdapter {
                 case 0 -> {
                     gp.gameState = gp.playState;
                     gp.resetGame(false);
-                    gp.playMusic(0);
-                }
+                    gp.gameFacade.playBackgroundMusic(0);                }
                 case 1 -> {
                     gp.ui.titleScreenState = 0;
                     gp.gameState = gp.titleState;

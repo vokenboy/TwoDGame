@@ -148,15 +148,15 @@ public class MON_SkeletonLord extends Entity {
         Progress.skeletonLordDefeated = true;
 
         //Restore the previous music
-        gp.stopMusic();
-        gp.playMusic(19);
+        gp.gameFacade.stopBackgroundMusic();
+        gp.gameFacade.playBackgroundMusic(19);
 
         // Remove the iron doors
         for(int i = 0; i < gp.obj[1].length; i++)
         {
             if(gp.obj[gp.currentMap][i] != null && gp.obj[gp.currentMap][i].name.equals(OBJ_Door_Iron.objName))
             {
-                gp.playSE(21);
+                gp.gameFacade.playSoundEffect(21);
                 gp.obj[gp.currentMap][i] = null;
             }
         }

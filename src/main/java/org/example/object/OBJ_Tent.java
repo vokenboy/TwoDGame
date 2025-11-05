@@ -23,7 +23,7 @@ public class OBJ_Tent extends Entity {
 
     public boolean use(Entity entity) {
         gp.gameState = gp.sleepState;
-        gp.playSE(14);
+        gp.gameFacade.playSoundEffect(14);
         gp.player.life = gp.player.maxLife;
         gp.player.mana = gp.player.maxMana;
         gp.player.getSleepingImage(down1);

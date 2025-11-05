@@ -31,7 +31,7 @@ public class OBJ_Potion_Red extends Entity {
     {
         startDialogue(this,0);
         entity.life += value;
-        gp.playSE(2);
+        gp.gameFacade.playSoundEffect(2);
         return true;
     }
 }

@@ -31,7 +31,7 @@ public class IT_DryTree extends InteractiveTile{
     }
     public void playSE()
     {
-        gp.playSE(11);
+        gp.gameFacade.playSoundEffect(11);
     }
     public InteractiveTile getDestroyedForm()
     {

@@ -65,7 +65,7 @@ public class CutsceneManager {
                     gp.obj[gp.currentMap][i].worldX = gp.tileSize * 25;
                     gp.obj[gp.currentMap][i].worldY = gp.tileSize * 28;
                     gp.obj[gp.currentMap][i].temp = true; //only need during the boss fight
-                    gp.playSE(21);
+                    gp.gameFacade.playSoundEffect(21);
                     break;
                 }
             }
@@ -139,15 +139,15 @@ public class CutsceneManager {
             gp.gameState = gp.playState;
 
             //Change the music
-            gp.stopMusic();
-            gp.playMusic(22);
+            gp.gameFacade.stopBackgroundMusic();
+            gp.gameFacade.playSoundEffect(22);
         }
     }
     public void scene_ending()
     {
         if(scenePhase == 0)
         {
-            gp.stopMusic();
+            gp.gameFacade.stopBackgroundMusic();
             gp.ui.npc = new OBJ_BlueHeart(gp);
             scenePhase++;
         }
@@ -159,7 +159,7 @@ public class CutsceneManager {
         if(scenePhase == 2)
         {
             //Play the fanfare
-            gp.playSE(4);
+            gp.gameFacade.playSoundEffect(4);
             scenePhase++;
         }
         if(scenePhase == 3)
@@ -209,7 +209,7 @@ public class CutsceneManager {
 
             if(counterReached(600) == true && alpha == 1f)
             {
-                gp.playMusic(0);
+                gp.gameFacade.playSoundEffect(0);
                 alpha = 0;
                 scenePhase++;
             }

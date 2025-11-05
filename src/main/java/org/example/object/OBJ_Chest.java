@@ -43,7 +43,7 @@ public class OBJ_Chest extends Entity {
     {
         if(opened == false)
         {
-            gp.playSE(3);
+            gp.gameFacade.playSoundEffect(3);
 
             if(gp.player.canObtainItem(loot) == false)
             {

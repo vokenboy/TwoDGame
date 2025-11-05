@@ -24,7 +24,7 @@ public class OBJ_ManaCrystal extends Entity {
     }
     public boolean use(Entity entity)
     {
-        gp.playSE(2);
+        gp.gameFacade.playSoundEffect(2);
         gp.ui.addMessage("Mana +" + value);
         entity.mana += value;
         return true;

@@ -96,7 +96,7 @@ public class UI {
 
             if(charIndex < characters.length)
             {
-                gp.playSE(17);//Speak sound
+                gp.gameFacade.playSoundEffect(17);//Speak sound
                 String s = String.valueOf(characters[charIndex]);
                 combinedText = combinedText + s; //every loop add one character to combinedText
                 currentDialogue = combinedText;
@@ -1153,7 +1153,7 @@ public class UI {
                 gp.ui.titleScreenState = 0;
                 gp.gameState = gp.titleState;
                 gp.resetGame(true);
-                gp.stopMusic();
+                gp.gameFacade.stopBackgroundMusic();
             }
         }
 

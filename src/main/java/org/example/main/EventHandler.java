@@ -125,12 +125,12 @@ public class EventHandler{
         tempRow = row;
         //DRAW TRANSITION IN UI
         canTouchEvent = false;
-        gp.playSE(13);
+        gp.gameFacade.playSoundEffect(13);
     }
     public void damagePit(int gameState)
     {
         gp.gameState = gameState;
-        gp.playSE(6);
+        gp.gameFacade.playSoundEffect(6);
         eventMaster.startDialogue(eventMaster, 0);
         gp.player.life -= 2;
         canTouchEvent = false;
@@ -142,7 +142,7 @@ public class EventHandler{
         {
             gp.gameState = gameState;
             gp.player.attackCanceled = true;
-            gp.playSE(2);
+            gp.gameFacade.playSoundEffect(2);
             eventMaster.startDialogue(eventMaster,1);
             gp.player.life = gp.player.maxLife;
             gp.player.mana = gp.player.maxMana;

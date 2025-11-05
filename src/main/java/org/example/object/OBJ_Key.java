@@ -35,7 +35,7 @@ public class OBJ_Key extends Entity {
         if(objIndex != 999)
         {
             startDialogue(this,0);
-            gp.playSE(3);
+            gp.gameFacade.playSoundEffect(3);
             gp.obj[gp.currentMap][objIndex] = null;
             return true;
         }

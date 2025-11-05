@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
 
-
 public class GamePanel extends JPanel implements Runnable {
     //SCREEN SETTINGS
     public List<DamageNumber> damageNumbers = new ArrayList<>();
@@ -55,6 +54,7 @@ public class GamePanel extends JPanel implements Runnable {
     public EventHandler eHandler = new EventHandler(this);
     Sound music = new Sound(); // Created 2 different objects for Sound Effect and Music. If you use 1 object SE or Music stops sometimes.
     Sound se = new Sound();
+    public GameFacade gameFacade; // Facade Pattern - unified interface for audio and collision
     public CollisionChecker cChecker = new CollisionChecker(this);
     public AssetSetter  aSetter = new AssetSetter(this);
     public UI ui = new UI(this);
@@ -114,7 +114,9 @@ public class GamePanel extends JPanel implements Runnable {
         this.setFocusable(true);
 
         this.iTileFactory = new InteractiveTileFactory(this);
+        this.gameFacade = new GameFacade(this, music, se); // Initialize facade
     }
+
     public void setupGame()
     {
         aSetter.setObject();
@@ -123,8 +125,6 @@ public class GamePanel extends JPanel implements Runnable {
         aSetter.setInteractiveTile();
         eManager.setup();
 
-        /*playMusic(0);   // 0 = BlueBoyAdventure.wav
-        stopMusic();*/
         gameState = titleState;
         //FOR FULLSCREEN
         tempScreen = new BufferedImage(screenWidth,screenHeight,BufferedImage.TYPE_INT_ARGB); //blank screen
@@ -134,9 +134,10 @@ public class GamePanel extends JPanel implements Runnable {
             setFullScreen();
         }
     }
+
     public void resetGame(boolean restart)
     {
-        stopMusic();
+        gameFacade.stopBackgroundMusic();
         currentArea = outside;
         removeTempEntity();
         bossBattleOn = false;
@@ -153,8 +154,8 @@ public class GamePanel extends JPanel implements Runnable {
             aSetter.setInteractiveTile();
             eManager.lighting.resetDay();
         }
-
     }
+
     public void setFullScreen()
     {
         //GET LOCAL SCREEN DEVICE
@@ -180,33 +181,20 @@ public class GamePanel extends JPanel implements Runnable {
         double delta = 0;
         long lastTime = System.nanoTime();
         long currentTime;
-        //long timer = 0;
-        //int drawCount = 0;
-
 
         while(gameThread != null)
         {
             currentTime = System.nanoTime();
 
             delta += (currentTime - lastTime) / drawInterval;
-            //timer += currentTime - lastTime;
             lastTime = currentTime;
             if(delta >= 1)
             {
                 update();
-                /*repaint(); COMMENTED FOR FULL SCREEN*/
                 drawToTempScreen(); //FOR FULL SCREEN - Draw everything to the buffered image
                 drawToScreen();     //FOR FULL SCREEN - Draw the buffered image to the screen
                 delta--;
-                //drawCount++;
             }
-            //SHOW FPS
-            /*if(timer >= 1000000000)
-            {
-                System.out.println("FPS:" + drawCount);
-                drawCount = 0;
-                timer = 0;
-            }*/
         }
     }
 
@@ -218,7 +206,7 @@ public class GamePanel extends JPanel implements Runnable {
             player.update();
 
             //NPC
-            for(int i = 0; i < npc[1].length; i++) //[1] means second dimension's length!!!
+            for(int i = 0; i < npc[1].length; i++)
             {
                 if(npc[currentMap][i] != null)
                 {
@@ -237,7 +225,7 @@ public class GamePanel extends JPanel implements Runnable {
                     }
                     if(monster[currentMap][i].alive == false)
                     {
-                        monster[currentMap][i].checkDrop(); //when monster dies, i check its drop
+                        monster[currentMap][i].checkDrop();
                         monster[currentMap][i] = null;
                     }
                 }
@@ -400,7 +388,7 @@ public class GamePanel extends JPanel implements Runnable {
             Collections.sort(entityList, new Comparator<Entity>() {
                 @Override
                 public int compare(Entity e1, Entity e2) {
-                    int result = Integer.compare(e1.worldY, e2.worldY);   // result returns : (x=y : 0, x>y : >0, x<y : <0)
+                    int result = Integer.compare(e1.worldY, e2.worldY);
                     return result;
                 }
             });
@@ -427,7 +415,6 @@ public class GamePanel extends JPanel implements Runnable {
             ui.draw(g2);
 
             //DEBUG
-
             if(keyH.showDebugText == true)
             {
                 long drawEnd = System.nanoTime();
@@ -452,7 +439,6 @@ public class GamePanel extends JPanel implements Runnable {
                 g2.drawString("Draw time: " + passed,x,y);
                 y+= lineHeight;
                 g2.drawString("God Mode: " + keyH.godModeOn, x, y);
-
             }
         }
     }
@@ -461,13 +447,13 @@ public class GamePanel extends JPanel implements Runnable {
         return config;
     }
 
-
     public void drawToScreen()
     {
         Graphics g = getGraphics();
         g.drawImage(tempScreen, 0, 0,screenWidth2,screenHeight2,null);
         g.dispose();
     }
+
     //COMMENTED FOR FULLSCREEN
     /*public void paintComponent(Graphics g)
     {
@@ -600,45 +586,31 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }*/
 
-    public void playMusic(int i)
-    {
-        music.setFile(i);
-        music.play();
-        music.loop();
-    }
-    public void stopMusic()
-    {
-        music.stop();
-    }
-    public void playSE(int i) // Sound effect, dont need loop
-    {
-        se.setFile(i);
-        se.play();
-    }
     public void changeArea()
     {
         if(nextArea != currentArea)
         {
-            stopMusic();
+            gameFacade.stopBackgroundMusic();
 
             if(nextArea == outside)
             {
-                playMusic(0);
+                gameFacade.playBackgroundMusic(0);
             }
             if(nextArea == indoor)
             {
-                playMusic(18);
+                gameFacade.playBackgroundMusic(18);
             }
             if(nextArea == dungeon)
             {
-                playMusic(19);
+                gameFacade.playBackgroundMusic(19);
             }
-            aSetter.setNPC(); //reset for at the dungeon puzzle's stuck rocks.
+            aSetter.setNPC();
         }
 
         currentArea = nextArea;
         aSetter.setMonster();
     }
+
     public void removeTempEntity()
     {
         for(int mapNum = 0; mapNum < maxMap; mapNum++)

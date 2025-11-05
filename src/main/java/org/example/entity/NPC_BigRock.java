@@ -128,7 +128,7 @@ public class NPC_BigRock extends Entity{
                 if(linkedEntity == null)
                 {
                     linkedEntity = plateList.get(i);
-                    gp.playSE(3);
+                    gp.gameFacade.playSoundEffect(3);
                 }
             }
             else
@@ -158,7 +158,7 @@ public class NPC_BigRock extends Entity{
                 if(gp.obj[gp.currentMap][i] != null && gp.obj[gp.currentMap][i].name.equals(OBJ_Door_Iron.objName))
                 {
                     gp.obj[gp.currentMap][i] = null;
-                    gp.playSE(21);
+                    gp.gameFacade.playSoundEffect(21);
                 }
             }
         }

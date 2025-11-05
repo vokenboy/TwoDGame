@@ -667,16 +667,16 @@ public class Entity {
             if (gp.player.guarding && gp.player.direction.equals(canGuardDirection)) {
                 if (gp.player.guardCounter < 10) {
                     damage = 0;
-                    gp.playSE(16);
+                    gp.gameFacade.playSoundEffect(16);
                     setKnockBack(this, gp.player, knockBackPower);
                     offBalance = true;
                     spriteCounter -= 60;
                 } else {
                     damage /= 2;
-                    gp.playSE(15);
+                    gp.gameFacade.playSoundEffect(15);
                 }
             } else {
-                gp.playSE(6);
+                gp.gameFacade.playSoundEffect(6);
                 if (damage < 1) damage = 1;
             }
 

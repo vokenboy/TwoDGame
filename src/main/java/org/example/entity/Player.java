@@ -265,7 +265,7 @@ public class Player extends Entity {
 
     public void attackAction() {
         if (!attacking && !attackCanceled) {
-            gp.playSE(7);
+            gp.gameFacade.playSoundEffect(7);
             attacking = true;
             spriteCounter = 0;
         }
@@ -289,7 +289,7 @@ public class Player extends Entity {
             }
 
             shotAvailableCounter = 0;
-            gp.playSE(10);
+            gp.gameFacade.playSoundEffect(10);
         }
     }
 
@@ -415,7 +415,7 @@ public class Player extends Entity {
 
             if(keyH.enterPressed == true && attackCanceled == false)
             {
-                gp.playSE(7);
+                gp.gameFacade.playSoundEffect(7);
                 attacking = true;
                 spriteCounter = 0;
             }
@@ -463,7 +463,7 @@ public class Player extends Entity {
             }
 
             shotAvailableCounter = 0;
-            gp.playSE(10);
+            gp.gameFacade.playSoundEffect(10);
             notifyManaChange();
         }
 
@@ -485,7 +485,7 @@ public class Player extends Entity {
             }
 
             shotAvailableCounter = 0;
-            gp.playSE(10);
+            gp.gameFacade.playSoundEffect(10);
             notifyManaChange();
         }
 
@@ -519,8 +519,8 @@ public class Player extends Entity {
             {
                 gp.gameState = gp.gameOverState;
                 gp.ui.commandNum =- 1; //for if you die while pressing enter
-                gp.stopMusic();
-                gp.playSE(12);
+                gp.gameFacade.stopBackgroundMusic();
+                gp.gameFacade.playSoundEffect(12);
             }
         }
     }
@@ -538,7 +538,7 @@ public class Player extends Entity {
                 for (int i = 0; i < gp.projectile[1].length; i++) {
                     if (gp.projectile[gp.currentMap][i] == null) {
                         gp.projectile[gp.currentMap][i] = bigProjectile;
-                        gp.playSE(10);
+                        gp.gameFacade.playSoundEffect(10);
                         break;
                     }
                 }
@@ -574,7 +574,7 @@ public class Player extends Entity {
                 if(canObtainItem(gp.obj[gp.currentMap][i]) == true) //if inventory is not full can pick up object
                 {
                     //inventory.add(gp.obj[gp.currentMap][i]); //canObtainItem() already adds item
-                    gp.playSE(1);
+                    gp.gameFacade.playSoundEffect(16);
                     text = "Got a " + gp.obj[gp.currentMap][i].name + "!";
                 }
                 else
@@ -605,7 +605,7 @@ public class Player extends Entity {
         {
             if(invincible == false && gp.monster[gp.currentMap][i].dying == false)
             {
-                gp.playSE(6);  //receivedamage.wav
+                gp.gameFacade.playSoundEffect(6);  //receivedamage.wav
 
                 int damage = gp.monster[gp.currentMap][i].attack - defense;
                 if(damage < 1)
@@ -623,7 +623,7 @@ public class Player extends Entity {
             Entity target = gp.monster[gp.currentMap][i];
 
             if (!target.invincible) {
-                gp.playSE(5); // hitmonster.wav
+                gp.gameFacade.playSoundEffect(5); // hitmonster.wav
 
                 // Apply knockback if available
                 if (knockBackPower > 0) {
@@ -708,7 +708,7 @@ public class Player extends Entity {
             dexterity++;
             attack = getAttack();
             defense = getDefense();
-            gp.playSE(8); //levelup.wav
+            gp.gameFacade.playSoundEffect(8); //levelup.wav
 
             dialogues[0][0] = "You are level " + level + " now!\n" + "You feel stronger!";
             setDialogue();

@@ -35,11 +35,11 @@ public class Config {
             bw.newLine();
 
             //Music Volume
-            bw.write(String.valueOf(gp.music.volumeScale));
+            bw.write(String.valueOf(gp.gameFacade.getMusicVolume()));
             bw.newLine();
 
             //SE Volume
-            bw.write(String.valueOf(gp.se.volumeScale));
+            bw.write(String.valueOf(gp.gameFacade.getSoundEffectVolume()));
             bw.newLine();
 
             bw.close();
@@ -69,11 +69,11 @@ public class Config {
 
             // Music Volume
             s = br.readLine();
-            gp.music.volumeScale = Integer.parseInt(s);
+            gp.gameFacade.setMusicVolume(Integer.parseInt(s));
 
             // SE Volume
             s = br.readLine();
-            gp.se.volumeScale = Integer.parseInt(s);
+            gp.gameFacade.setSoundEffectVolume(Integer.parseInt(s));
 
             br.close();
 
