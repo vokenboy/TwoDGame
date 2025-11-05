@@ -4,9 +4,11 @@ import org.example.main.GamePanel;
 
 import java.awt.*;
 import java.util.Random;
-
+import java.util.List;
+import java.util.ArrayList;
 
 public class NPC_OldMan extends Entity{
+    private List<int[]> patrolPoints;
 
     public NPC_OldMan(GamePanel gp)
     {
@@ -24,10 +26,22 @@ public class NPC_OldMan extends Entity{
         solidAreaDefaultY = 16;
 
         dialogueSet = -1; //For first dialogueSet(= 0)
+        patrolPoints = new ArrayList<>();
 
+        int centerCol = gp.maxWorldCol / 2;
+        int centerRow = gp.maxWorldRow / 2;
+
+        patrolPoints.add(new int[]{centerCol - 1, centerRow - 1});
+        patrolPoints.add(new int[]{centerCol - 1, centerRow + 1});
+        patrolPoints.add(new int[]{centerCol + 1, centerRow + 1});
+        patrolPoints.add(new int[]{centerCol + 1, centerRow - 1});
+
+        setMovementStrategy(new PatrollingStrategy(patrolPoints, 1));
         getImage();
         setDialogue();
+        setMovementStrategy(new PatrollingStrategy(patrolPoints, 1));
     }
+
     public void getImage()
     {
         up1 = setup("/npc/oldman_up_1",gp.tileSize,gp.tileSize);
@@ -55,44 +69,27 @@ public class NPC_OldMan extends Entity{
     }
     public void setAction()
     {
-        if(onPath == true)
-        {
-//            int goalCol = 12;
-//            int goalRow = 9;
-
-            int goalCol = (gp.player.worldX + gp.player.solidArea.x) / gp.tileSize;
-            int goalRow = (gp.player.worldY + gp.player.solidArea.y) / gp.tileSize;
-            searchPath(goalCol, goalRow);
-
-        }
-        else
-        {
+        // Let the movement strategy handle movement
+        if (getMovementStrategy() != null) {
+            performMove();
+        } else {
+            // Fallback: random movement
             actionLockCounter++;
 
             if(actionLockCounter == 120)
             {
                 Random random = new Random();
-                int i = random.nextInt(100) + 1;  // pick up  a number from 1 to 100
-                if(i <= 25)
-                {
-                    direction = "up";
-                }
-                if(i>25 && i <= 50)
-                {
-                    direction = "down";
-                }
-                if(i>50 && i <= 75)
-                {
-                    direction = "left";
-                }
-                if(i>75 && i <= 100)
-                {
-                    direction = "right";
-                }
-                actionLockCounter = 0; // reset
+                int i = random.nextInt(100) + 1;
+                if(i <= 25) direction = "up";
+                else if(i <= 50) direction = "down";
+                else if(i <= 75) direction = "left";
+                else direction = "right";
+
+                actionLockCounter = 0;
             }
         }
     }
+
     public void speak()
     {
         //ENTITY CLASS SPEAK()
