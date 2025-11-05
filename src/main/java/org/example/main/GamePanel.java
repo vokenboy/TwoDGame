@@ -107,7 +107,6 @@ public class GamePanel extends JPanel implements Runnable{
         this.setPreferredSize(new Dimension(screenWidth, screenHeight)); // JPanel size
         this.setBackground(Color.black);
         this.setDoubleBuffered(true); // improve game's rendering performance
-        this.addKeyListener(keyH);
         this.setFocusable(true);
     }
     public void setupGame()
@@ -282,6 +281,8 @@ public class GamePanel extends JPanel implements Runnable{
             eManager.update();
         }
 
+        keyH.update();
+
         if(gameState == pauseState)
         {
             //nothing, just pause screen
@@ -432,9 +433,12 @@ public class GamePanel extends JPanel implements Runnable{
             }
         }
     }
+
     public Config getConfig() {
         return config;
     }
+
+
     public void drawToScreen()
     {
         Graphics g = getGraphics();

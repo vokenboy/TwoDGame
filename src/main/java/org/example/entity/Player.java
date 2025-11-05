@@ -9,7 +9,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 
-public class Player extends Entity{
+public class Player extends Entity {
 
     KeyHandler keyH;
     public final int screenX;
@@ -226,7 +226,38 @@ public class Player extends Entity{
         guardLeft = setup("/player/boy_guard_left",gp.tileSize,gp.tileSize);
         guardRight = setup("/player/boy_guard_right",gp.tileSize,gp.tileSize);
     }
-    public void update() // Runs 60 times every seconds.
+
+    public void attackAction() {
+        if (!attacking && !attackCanceled) {
+            gp.playSE(7);
+            attacking = true;
+            spriteCounter = 0;
+        }
+    }
+
+    public void castSpellAction() {
+        if (projectile != null
+                && projectile.alive == false
+                && shotAvailableCounter == 30
+                && projectile.haveResource(this)) {
+
+            projectile.set(worldX, worldY, direction, true, this);
+
+            projectile.subtractResource(this);
+
+            for (int i = 0; i < gp.projectile[1].length; i++) {
+                if (gp.projectile[gp.currentMap][i] == null) {
+                    gp.projectile[gp.currentMap][i] = projectile;
+                    break;
+                }
+            }
+
+            shotAvailableCounter = 0;
+            gp.playSE(10);
+        }
+    }
+
+    public void update()
     {
         if(knockBack == true)
         {
@@ -273,7 +304,7 @@ public class Player extends Entity{
                 speed = defaultSpeed;
             }
         }
-        else if(attacking == true) //Need to adjust attack to "up" and "left" cuz player goes back a tile. Need to adjust drawing start point(x,y)
+        else if(attacking == true)
         {
             attacking();
         }
@@ -821,4 +852,3 @@ public class Player extends Entity{
         g2.drawRect(tempScreenX, tempScreenY, attackArea.width, attackArea.height);*/
     }
 }
-
