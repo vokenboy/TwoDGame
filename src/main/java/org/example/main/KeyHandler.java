@@ -259,7 +259,7 @@ public class KeyHandler extends KeyAdapter {
         }
 
         if (enter && selected == 3) {
-            gp.gameFacade.playSoundEffect(22);
+            gp.gameFacade.playSoundEffect(9);
         }
 
         if (enter && selected == 4) {
@@ -287,7 +287,7 @@ public class KeyHandler extends KeyAdapter {
         if (down) {
             gp.ui.commandNum++;
             if (gp.ui.commandNum > 1) gp.ui.commandNum = 0;
-            gp.gameFacade.playSoundEffect(22);
+            gp.gameFacade.playSoundEffect(9);
         }
 
         if (enter) {

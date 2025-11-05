@@ -2,13 +2,6 @@ package org.example.main;
 
 import org.example.entity.Entity;
 
-/**
- * COMPREHENSIVE FACADE PATTERN
- *
- * This facade provides a unified interface to major game subsystems:
- * - Audio Management (music & sound effects)
- * - Collision Detection (tiles, objects, entities, events)
- */
 public class GameFacade {
 
     // Subsystems
@@ -31,6 +24,7 @@ public class GameFacade {
     // ============================================
 
     public void playBackgroundMusic(int index) {
+        stopBackgroundMusic();  // stop any currently playing music
         music.setFile(index);
         music.play();
         music.loop();
@@ -82,11 +76,6 @@ public class GameFacade {
     // COLLISION DETECTION METHODS
     // ============================================
 
-    /**
-     * Check ALL collision types for an entity
-     * Coordinates: CollisionChecker + multiple entity arrays
-     * Returns: true if ANY collision occurred
-     */
     public boolean checkAllCollisions(Entity entity, boolean isPlayer) {
         entity.collisionOn = false;
 
@@ -110,10 +99,7 @@ public class GameFacade {
         return entity.collisionOn;
     }
 
-    /**
-     * Check collision and get the index of what was hit
-     * Useful for interaction logic
-     */
+
     public CollisionResult checkCollisionWithIndex(Entity entity, boolean isPlayer) {
         entity.collisionOn = false;
 
@@ -140,10 +126,7 @@ public class GameFacade {
         return result;
     }
 
-    /**
-     * Check if entity can move in its current direction
-     * Simple true/false check
-     */
+
     public boolean canEntityMove(Entity entity) {
         entity.collisionOn = false;
 
@@ -155,10 +138,6 @@ public class GameFacade {
         return !entity.collisionOn;
     }
 
-    /**
-     * Check player-specific collisions including events
-     * Coordinates: CollisionChecker + EventHandler
-     */
     public void checkPlayerCollisions() {
         // Standard collision checks
         checkAllCollisions(gp.player, true);
@@ -181,26 +160,16 @@ public class GameFacade {
         gp.player.pickUpObject(objIndex);
     }
 
-    /**
-     * Check monster collision with player
-     * Returns: true if monster touched player
-     */
+
     public boolean monsterContactedPlayer(Entity monster) {
         return cChecker.checkPlayer(monster);
     }
 
-    /**
-     * Simplified object interaction check
-     * Returns: index of object player is touching, or 999 if none
-     */
+
     public int checkObjectInteraction(Entity entity) {
         return cChecker.checkObject(entity, true);
     }
 
-    /**
-     * Check if specific entity types can see the player
-     * Used for monster AI detection
-     */
     public boolean canSeePlayer(Entity entity, int distance) {
         int xDistance = Math.abs(entity.worldX - gp.player.worldX);
         int yDistance = Math.abs(entity.worldY - gp.player.worldY);
@@ -213,10 +182,7 @@ public class GameFacade {
     // HELPER METHODS (Combining Systems)
     // ============================================
 
-    /**
-     * Play collision sound effect
-     * Convenient method combining collision detection with audio
-     */
+
     public void playCollisionSound(Entity entity) {
         if(entity.collisionOn) {
             playSoundEffect(15); // blocked sound
@@ -227,9 +193,7 @@ public class GameFacade {
     // INNER CLASS - Collision Result
     // ============================================
 
-    /**
-     * Data structure to hold collision detection results
-     */
+
     public static class CollisionResult {
         public boolean tileCollision = false;
         public int objectIndex = 999;
