@@ -9,6 +9,7 @@ import org.example.tile.Map;
 import org.example.tile.TileManager;
 import org.example.tile_interactive.InteractiveTile;
 import org.example.Main;
+import org.example.tile_interactive.InteractiveTileFactory;
 
 import javax.swing.JPanel;
 import java.awt.*;
@@ -74,6 +75,7 @@ public class GamePanel extends JPanel implements Runnable{
     //public ArrayList<Entity> projectileList = new ArrayList<>();
     public ArrayList<Entity> particleList = new ArrayList<>();
     ArrayList<Entity> entityList = new ArrayList<>();
+    public InteractiveTileFactory iTileFactory;
 
 
     //GAME STATE
@@ -108,6 +110,8 @@ public class GamePanel extends JPanel implements Runnable{
         this.setBackground(Color.black);
         this.setDoubleBuffered(true); // improve game's rendering performance
         this.setFocusable(true);
+
+        this.iTileFactory = new InteractiveTileFactory(this);
     }
     public void setupGame()
     {
