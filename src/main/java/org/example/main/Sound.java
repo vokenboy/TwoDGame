@@ -67,10 +67,14 @@ public class Sound {
         clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
 
-    public void stop()
-    {
-        clip.stop();
+    public void stop() {
+        if (clip != null) {
+            clip.stop();
+            clip.close();
+            clip = null;
+        }
     }
+
 
     public void checkVolume()
     {
