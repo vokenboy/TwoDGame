@@ -27,7 +27,7 @@ public class KeyHandler extends KeyAdapter {
     private boolean prevPause, prevCharacter, prevMap, prevEscape;
     private boolean prevLeft, prevRight;
     private boolean prevUp, prevDown, prevEnter;
-    private boolean prevShot, prevAltShot, prevSpace;
+    private boolean prevShot, prevAltShot;
     public boolean showDebugText = false;
     public boolean godModeOn = false;
 
@@ -76,9 +76,11 @@ public class KeyHandler extends KeyAdapter {
         } else if (gp.gameState == gp.gameOverState) {
             handleGameOverInput();
         } else if (gp.gameState == gp.tradeState) {
-            handleTradeInput();
+            handleTradeInput(escapePressed);
         } else if (gp.gameState == gp.mapState) {
-            handleMapInput();
+            handleMapInput(escapePressed);
+        } else if(gp.gameState == gp.enchantState) {
+            handleEnchantInput(escapePressed);
         }
 
         prevUp = upPressed;
@@ -88,7 +90,6 @@ public class KeyHandler extends KeyAdapter {
         prevEnter = enterPressed;
         prevShot = shotKeyPressed;
         prevAltShot = altShotKeyPressed;
-        prevSpace = spacePressed;
         prevPause = pausePressed;
         prevCharacter = characterPressed;
         prevMap = mapPressed;
@@ -305,15 +306,145 @@ public class KeyHandler extends KeyAdapter {
         }
     }
 
-    private void handleTradeInput() {
-        if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
+    private void handleEnchantInput(boolean escapePressed) {
+        boolean up = justPressed(upPressed, prevUp);
+        boolean down = justPressed(downPressed, prevDown);
+        boolean left = justPressed(leftPressed, prevLeft);
+        boolean right = justPressed(rightPressed, prevRight);
+        boolean escape = justPressed(escapePressed, prevEscape);
+
+        if (gp.ui.subState == 0) {
+            if (cycleMenuOption(up, down, 1)) {
+                gp.gameFacade.playSoundEffect(9);
+            }
+            if (escape) {
+                exitInteraction();
+            }
+            return;
+        }
+
+        if (moveInventoryCursor(false, up, down, left, right)) {
+            gp.gameFacade.playSoundEffect(9);
+        }
+        if (escape) {
+            gp.ui.subState = 0;
+            gp.gameFacade.playSoundEffect(9);
+        }
+    }
+
+    private void handleTradeInput(boolean escapePressed) {
+        boolean up = justPressed(upPressed, prevUp);
+        boolean down = justPressed(downPressed, prevDown);
+        boolean left = justPressed(leftPressed, prevLeft);
+        boolean right = justPressed(rightPressed, prevRight);
+        boolean escape = justPressed(escapePressed, prevEscape);
+
+        switch (gp.ui.subState) {
+            case 0 -> handleTradeSelection(up, down, escape);
+            case 1 -> handleNpcInventoryNavigation(up, down, left, right, escape);
+            case 2 -> handlePlayerInventoryNavigation(up, down, left, right, escape);
+            default -> {
+            }
+        }
+    }
+
+    private void handleMapInput(boolean escapePressed) {
+        if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)
+                || justPressed(escapePressed, prevEscape)) {
             gp.gameState = gp.playState;
         }
     }
 
-    private void handleMapInput() {
-        if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
-            gp.gameState = gp.playState;
+    private void handleTradeSelection(boolean up, boolean down, boolean escape) {
+        if (cycleMenuOption(up, down, 2)) {
+            gp.gameFacade.playSoundEffect(9);
         }
+
+        if (escape) {
+            exitInteraction();
+        }
+    }
+
+    private void handleNpcInventoryNavigation(boolean up, boolean down, boolean left, boolean right, boolean escape) {
+        if (moveInventoryCursor(true, up, down, left, right)) {
+            gp.gameFacade.playSoundEffect(9);
+        }
+        if (escape) {
+            gp.ui.subState = 0;
+            gp.gameFacade.playSoundEffect(9);
+        }
+    }
+
+    private void handlePlayerInventoryNavigation(boolean up, boolean down, boolean left, boolean right, boolean escape) {
+        if (moveInventoryCursor(false, up, down, left, right)) {
+            gp.gameFacade.playSoundEffect(9);
+        }
+        if (escape) {
+            gp.ui.subState = 0;
+            gp.gameFacade.playSoundEffect(9);
+        }
+    }
+
+    private boolean moveInventoryCursor(boolean npcInventory, boolean up, boolean down,
+                                        boolean left, boolean right) {
+        int maxCol = 4;
+        int maxRow = 3;
+
+        if (npcInventory) {
+            int col = gp.ui.npcSlotCol;
+            int row = gp.ui.npcSlotRow;
+            int originalCol = col;
+            int originalRow = row;
+
+            if (up && row > 0) row--;
+            if (down && row < maxRow) row++;
+            if (left && col > 0) col--;
+            if (right && col < maxCol) col++;
+
+            gp.ui.npcSlotCol = col;
+            gp.ui.npcSlotRow = row;
+            return originalCol != col || originalRow != row;
+        }
+
+        int col = gp.ui.playerSlotCol;
+        int row = gp.ui.playerSlotRow;
+        int originalCol = col;
+        int originalRow = row;
+
+        if (up && row > 0) row--;
+        if (down && row < maxRow) row++;
+        if (left && col > 0) col--;
+        if (right && col < maxCol) col++;
+
+        gp.ui.playerSlotCol = col;
+        gp.ui.playerSlotRow = row;
+        return originalCol != col || originalRow != row;
+    }
+
+    private boolean cycleMenuOption(boolean up, boolean down, int maxIndex) {
+        int previous = gp.ui.commandNum;
+        if (up) {
+            gp.ui.commandNum--;
+            if (gp.ui.commandNum < 0) {
+                gp.ui.commandNum = maxIndex;
+            }
+        } else if (down) {
+            gp.ui.commandNum++;
+            if (gp.ui.commandNum > maxIndex) {
+                gp.ui.commandNum = 0;
+            }
+        }
+        return previous != gp.ui.commandNum;
+    }
+
+    private void exitInteraction() {
+        gp.ui.commandNum = 0;
+        gp.ui.subState = 0;
+        gp.ui.playerSlotCol = 0;
+        gp.ui.playerSlotRow = 0;
+        gp.ui.npcSlotCol = 0;
+        gp.ui.npcSlotRow = 0;
+        gp.gameState = gp.playState;
+        gp.gameFacade.playSoundEffect(9);
     }
 }

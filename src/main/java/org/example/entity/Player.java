@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 public class Player extends Entity {
@@ -21,6 +22,7 @@ public class Player extends Entity {
     public boolean lightUpdated = false;
 
     private List<PlayerObserver> observers = new ArrayList<>();
+    private final Random combatRandom = new Random();
 
 
     public Player(GamePanel gp, KeyHandler keyH)
@@ -170,6 +172,23 @@ public class Player extends Entity {
     public int getDefense()
     {
         return defense = dexterity * currentShield.defenseValue;
+    }
+
+    public void equipWeapon(Entity weapon) {
+        if (weapon == null) {
+            return;
+        }
+        this.currentWeapon = weapon;
+        this.attack = getAttack();
+        getAttackImage();
+    }
+
+    public void equipShield(Entity shield) {
+        if (shield == null) {
+            return;
+        }
+        this.currentShield = shield;
+        this.defense = getDefense();
     }
     public int getCurrentWeaponSlot()
     {
@@ -622,6 +641,101 @@ public class Player extends Entity {
             }
         }
     }
+
+    public int mitigateIncomingDamage(int damage, boolean perfectGuard) {
+        int adjustedDamage = Math.max(0, damage);
+
+        int totalMitigationPercent = damageMitigationPercent;
+        int totalElementalResistPercent = elementalResistPercent;
+        int totalGuardStrength = guardStrength;
+        int totalBonusDamagePercent = bonusDamagePercent;
+        int totalCritChance = criticalChance;
+        int totalCritDamagePercent = bonusCritDamagePercent;
+        int totalLifeStealPercent = lifeStealPercent;
+
+        if (currentWeapon != null) {
+            totalMitigationPercent += Math.max(0, currentWeapon.damageMitigationPercent);
+            totalElementalResistPercent += Math.max(0, currentWeapon.elementalResistPercent);
+            totalGuardStrength += Math.max(0, currentWeapon.guardStrength);
+            totalBonusDamagePercent += currentWeapon.bonusDamagePercent;
+            totalCritChance += currentWeapon.criticalChance;
+            totalCritDamagePercent += currentWeapon.bonusCritDamagePercent;
+            totalLifeStealPercent += currentWeapon.lifeStealPercent;
+        }
+
+        if (currentShield != null) {
+            totalMitigationPercent += Math.max(0, currentShield.damageMitigationPercent);
+            totalElementalResistPercent += Math.max(0, currentShield.elementalResistPercent);
+            totalGuardStrength += Math.max(0, currentShield.guardStrength);
+            totalBonusDamagePercent += currentShield.bonusDamagePercent;
+            totalCritChance += currentShield.criticalChance;
+            totalCritDamagePercent += currentShield.bonusCritDamagePercent;
+            totalLifeStealPercent += currentShield.lifeStealPercent;
+        }
+
+        totalCritChance = Math.min(100, Math.max(0, totalCritChance));
+        totalMitigationPercent = Math.max(0, totalMitigationPercent);
+        totalElementalResistPercent = Math.max(0, totalElementalResistPercent);
+        totalGuardStrength = Math.max(0, totalGuardStrength);
+
+        criticalHit = false;
+
+        if (perfectGuard) {
+            adjustedDamage = Math.max(0, adjustedDamage - totalGuardStrength);
+            int combinedMitigation = Math.min(95, totalMitigationPercent + totalElementalResistPercent);
+            adjustedDamage = reduceByPercent(adjustedDamage, combinedMitigation);
+            return adjustedDamage;
+        }
+
+        adjustedDamage = increaseByPercent(adjustedDamage, totalBonusDamagePercent);
+
+        if (totalCritChance > 0 && adjustedDamage > 0) {
+            if (combatRandom.nextInt(100) < totalCritChance) {
+                criticalHit = true;
+                int totalCritBonus = 50 + Math.max(0, totalCritDamagePercent);
+                adjustedDamage = increaseByPercent(adjustedDamage, totalCritBonus);
+            }
+        }
+
+        if (totalLifeStealPercent > 0 && adjustedDamage > 0) {
+            int healAmount = (int) Math.round(adjustedDamage * (totalLifeStealPercent / 100.0));
+            if (healAmount <= 0) {
+                healAmount = 1;
+            }
+            int previousLife = life;
+            life = Math.min(maxLife, life + healAmount);
+            if (life != previousLife) {
+                notifyHealthChange();
+            }
+        }
+
+        return Math.max(0, adjustedDamage);
+    }
+
+    private int increaseByPercent(int value, int percent) {
+        if (value <= 0 || percent == 0) {
+            return Math.max(0, value);
+        }
+        double multiplier = 1.0 + (percent / 100.0);
+        int result = (int) Math.round(value * multiplier);
+        if (result <= 0 && value > 0 && percent > 0) {
+            return value + 1;
+        }
+        return Math.max(0, result);
+    }
+
+    private int reduceByPercent(int value, int percent) {
+        if (value <= 0 || percent <= 0) {
+            return Math.max(0, value);
+        }
+        int clampedPercent = Math.min(95, percent);
+        double multiplier = 1.0 - (clampedPercent / 100.0);
+        int result = (int) Math.round(value * multiplier);
+        if (result < 0) {
+            return 0;
+        }
+        return result;
+    }
     public void damageMonster(int i, Entity attacker, int attack, int knockBackPower) {
         if (i != 999) {
             Entity target = gp.monster[gp.currentMap][i];
@@ -717,6 +831,7 @@ public class Player extends Entity {
             dialogues[0][0] = "You are level " + level + " now!\n" + "You feel stronger!";
             setDialogue();
             startDialogue(this,0);
+            notifyLevelUp();
         }
     }
     public void selectItem()

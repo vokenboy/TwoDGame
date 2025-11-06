@@ -1,6 +1,8 @@
 package org.example.main;
 
 import org.example.entity.Entity;
+import org.example.entity.decorator.EquipmentBuilder;
+import org.example.entity.decorator.ElementalDecorator;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
@@ -10,6 +12,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class UI {
 
@@ -36,6 +40,81 @@ public class UI {
     public Entity npc;
     int charIndex = 0;
     String combinedText = "";
+
+      private static final String[] ENCHANT_PREFIXES = {
+        "Arcane", "Mystic", "Prismatic", "Runic", "Aether", "Azure", "Celestial", "Umbral"
+    };
+
+    private static final String[] ENCHANT_SUFFIXES = {
+        "Weave", "Gambit", "Edge", "Ward", "Brand", "Aegis", "Catalyst", "Resonance"
+    };
+
+    private final Random rng = new Random();
+    private EnchantmentOption lastEnchantmentResult;
+    private String lastEnchantedItemName = "";
+
+    private enum OperationType {
+        DAMAGE("Damage Glyph", 1),
+        DEFENSE("Bulwark Sigil", 1),
+        LIFESTEAL("Vampiric Rune", 2),
+        CRITICAL("Assassin Sigil", 1),
+        ELEMENT("Elemental Brand", 1),
+        MANA("Arcane Seal", 1),
+        HEALTH("Fortitude Crest", 1),
+        SPEED("Tempest Script", 1);
+
+        final String label;
+        final int baseSlots;
+
+        OperationType(String label, int baseSlots) {
+            this.label = label;
+            this.baseSlots = baseSlots;
+        }
+
+        int slots(ElementalDecorator.ElementType elementType) {
+            if(this == ELEMENT && elementType != null) {
+                return elementType.slotsRequired;
+            }
+            return baseSlots;
+        }
+    }
+
+    private static final class EnchantOperation {
+        final OperationType type;
+        final int level;
+        final int value;
+        final ElementalDecorator.ElementType elementType;
+        final String summary;
+
+        EnchantOperation(OperationType type, int level, int value,
+                         ElementalDecorator.ElementType elementType, String summary) {
+            this.type = type;
+            this.level = level;
+            this.value = value;
+            this.elementType = elementType;
+            this.summary = summary;
+        }
+    }
+
+    private static final class EnchantmentOption {
+        final String title;
+        final List<EnchantOperation> operations;
+        final List<String> detailLines;
+
+        EnchantmentOption(String title, List<EnchantOperation> operations, List<String> detailLines) {
+            this.title = title;
+            this.operations = operations;
+            this.detailLines = detailLines;
+        }
+
+        int slotsUsed() {
+            int total = 0;
+            for(EnchantOperation op : operations) {
+                total += op.type.slots(op.elementType);
+            }
+            return total;
+        }
+    }
 
     public UI(GamePanel gp)
     {
@@ -602,6 +681,368 @@ public class UI {
                 gp.player.getImage();
             }
         }
+    }
+    public void drawEnchantScreen()
+    {
+        switch(subState)
+        {
+            case 0 -> enchant_select();
+            case 1 -> enchant_selectItem();
+            default -> enchant_select();
+        }
+        gp.keyH.enterPressed = false;
+    }
+    public void enchant_select()
+    {
+        npc.dialogueSet = 0;
+        drawDialogueScreen();
+
+        //DRAW WINDOW
+        int x = gp.tileSize * 15;
+        int y = gp.tileSize * 4;
+        int width = gp.tileSize * 3;
+        int height = (int)(gp.tileSize * 3.5);
+        drawSubWindow(x, y, width, height);
+
+        //DRAW TEXTS
+        x += gp.tileSize;
+        y += gp.tileSize;
+        g2.drawString("Enchant", x, y);
+        if(commandNum == 0)
+        {
+            g2.drawString(">", x - 24, y);
+            if(gp.keyH.enterPressed == true)
+            {
+                subState = 1;
+            }
+        }
+        y += gp.tileSize;
+        g2.drawString("Leave", x, y);
+        if(commandNum == 1)
+        {
+            g2.drawString(">", x - 24, y);
+            if(gp.keyH.enterPressed == true)
+            {
+                commandNum = 0;
+                npc.startDialogue(npc, 1);
+            }
+        }
+    }
+    public void enchant_selectItem()
+    {
+        drawInventory(gp.player, true);
+
+        int x = gp.tileSize * 2;
+        int y = gp.tileSize * 9;
+        int width = gp.tileSize * 6;
+        int height = gp.tileSize * 2;
+        drawSubWindow(x, y, width, height);
+        g2.drawString("[ESC] Back", x + 24, y + 50);
+        g2.drawString("Press [ENTER] to infuse a random enchant.", x + 24, y + 80);
+
+        if(lastEnchantmentResult != null)
+        {
+            x = gp.tileSize * 11;
+            y = gp.tileSize * 5;
+            width = gp.tileSize * 7;
+            height = gp.tileSize * 4;
+            drawSubWindow(x, y, width, height);
+            int textX = x + 24;
+            int textY = y + 36;
+            g2.setFont(g2.getFont().deriveFont(Font.BOLD, 18F));
+            g2.drawString("Last Enchant", textX, textY);
+            textY += 24;
+            g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 16F));
+            g2.drawString(lastEnchantedItemName, textX, textY);
+            textY += 22;
+            g2.drawString(lastEnchantmentResult.title, textX, textY);
+            textY += 22;
+            for(String line : lastEnchantmentResult.detailLines)
+            {
+                g2.drawString(line, textX, textY);
+                textY += 18;
+                if(textY > y + height - 16)
+                {
+                    break;
+                }
+            }
+        }
+
+        int itemIndex = getItemIndexOnSlot(playerSlotCol, playerSlotRow);
+        if(itemIndex < gp.player.inventory.size() && gp.keyH.enterPressed)
+        {
+            Entity selectedItem = gp.player.inventory.get(itemIndex);
+            if(isEnchantable(selectedItem))
+            {
+                performRandomEnchant(itemIndex, selectedItem);
+            }
+            else
+            {
+                subState = 0;
+                npc.startDialogue(npc, 3);
+            }
+            gp.keyH.enterPressed = false;
+        }
+    }
+
+    private void performRandomEnchant(int itemIndex, Entity selectedItem)
+    {
+        Entity baseItem = selectedItem.originalItem != null ? selectedItem.originalItem : selectedItem;
+        EnchantmentOption option = generateRandomOption(baseItem);
+        if(option == null)
+        {
+            addMessage("The runes fall silent. Try again.");
+            return;
+        }
+
+        Entity enchantedItem = buildEnchantedItem(baseItem, option);
+        if(enchantedItem == null)
+        {
+            addMessage("The ritual fizzled. Try again.");
+            return;
+        }
+
+        gp.player.inventory.set(itemIndex, enchantedItem);
+
+        if(selectedItem == gp.player.currentWeapon) {
+            gp.player.equipWeapon(enchantedItem);
+            gp.player.attack = gp.player.getAttack();
+        }
+        if(selectedItem == gp.player.currentShield) {
+            gp.player.equipShield(enchantedItem);
+            gp.player.defense = gp.player.getDefense();
+        }
+
+        lastEnchantmentResult = option;
+        lastEnchantedItemName = enchantedItem.name;
+
+        gp.gameFacade.playSoundEffect(9);
+        addMessage(option.title + " unleashed!");
+        int detailLinesToShow = Math.min(3, option.detailLines.size());
+        for(int i = 0; i < detailLinesToShow; i++) {
+            addMessage(option.detailLines.get(i));
+        }
+    }
+
+    private boolean isEnchantable(Entity item) {
+        if(item == null) {
+            return false;
+        }
+        int type = item.type;
+        return item.attackValue > 0 ||
+               type == gp.player.type_sword ||
+               type == gp.player.type_axe ||
+               type == gp.player.type_pickaxe ||
+               type == gp.player.type_shield;
+    }
+
+    private EnchantmentOption generateRandomOption(Entity baseItem)
+    {
+        if(baseItem == null) {
+            return null;
+        }
+        int availableSlots = Math.max(1, baseItem.enchantmentSlots - baseItem.usedEnchantmentSlots);
+        boolean baseHasElement = hasElementalMark(baseItem);
+        EnchantmentOption option = createRandomOption(baseItem, availableSlots, baseHasElement);
+        if(option != null)
+        {
+            option.detailLines.add(String.format("Slots used: %d/%d", option.slotsUsed(), baseItem.enchantmentSlots));
+        }
+        return option;
+    }
+
+    private boolean hasElementalMark(Entity item)
+    {
+        if(item.appliedEnchantments == null) {
+            return false;
+        }
+        for(String tag : item.appliedEnchantments) {
+            if(tag != null && tag.startsWith("ELEMENT_")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private EnchantmentOption createRandomOption(Entity baseItem, int maxSlots, boolean baseHasElement)
+    {
+        List<EnchantOperation> operations = new ArrayList<>();
+        int remaining = Math.max(1, maxSlots);
+        boolean elementAdded = baseHasElement;
+        int attempts = 0;
+
+        while(remaining > 0 && operations.size() < 4 && attempts < 10) {
+            EnchantOperation op = createRandomOperation(baseItem, remaining, !elementAdded);
+            if(op == null) {
+                attempts++;
+                continue;
+            }
+            operations.add(op);
+            remaining -= op.type.slots(op.elementType);
+            if(op.type == OperationType.ELEMENT) {
+                elementAdded = true;
+            }
+            if(remaining <= 0 || rng.nextDouble() < 0.35) {
+                break;
+            }
+        }
+
+        if(operations.isEmpty()) {
+            operations.add(createOperation(OperationType.DAMAGE, baseItem,
+                    Math.max(1, Math.min(3, 1 + rng.nextInt(3))), null));
+        }
+
+        List<String> lines = new ArrayList<>();
+        for(EnchantOperation op : operations) {
+            lines.add(op.summary);
+        }
+
+        String title = buildOptionTitle(operations);
+        return new EnchantmentOption(title, operations, lines);
+    }
+
+    private EnchantOperation createRandomOperation(Entity baseItem, int remainingSlots, boolean allowElement)
+    {
+        List<OperationType> pool = new ArrayList<>();
+        for(OperationType type : OperationType.values()) {
+            if(type == OperationType.ELEMENT && !allowElement) {
+                continue;
+            }
+            int slotCost = type == OperationType.ELEMENT ? 1 : type.baseSlots;
+            if(type == OperationType.LIFESTEAL && remainingSlots < 2) {
+                continue;
+            }
+            if(type != OperationType.LIFESTEAL && remainingSlots < slotCost) {
+                continue;
+            }
+            pool.add(type);
+        }
+        if(pool.isEmpty()) {
+            return null;
+        }
+
+        OperationType chosen = pool.get(rng.nextInt(pool.size()));
+        ElementalDecorator.ElementType elementType = null;
+        if(chosen == OperationType.ELEMENT) {
+            List<ElementalDecorator.ElementType> elements = new ArrayList<>();
+            for(ElementalDecorator.ElementType element : ElementalDecorator.ElementType.values()) {
+                if(element.slotsRequired <= remainingSlots) {
+                    elements.add(element);
+                }
+            }
+            if(elements.isEmpty()) {
+                return null;
+            }
+            elementType = elements.get(rng.nextInt(elements.size()));
+        }
+
+        int baseLevel = 1 + rng.nextInt(3);
+        if(rng.nextDouble() < 0.3) {
+            baseLevel++;
+        }
+        int level = Math.min(5, baseLevel);
+        if(chosen == OperationType.ELEMENT) {
+            level = Math.min(3, level);
+        }
+
+        return createOperation(chosen, baseItem, level, elementType);
+    }
+
+    private EnchantOperation createOperation(OperationType type, Entity baseItem, int level, ElementalDecorator.ElementType elementType)
+    {
+        int value = computeMagnitude(baseItem, type, level, elementType);
+        String summary = buildSummary(type, level, value, elementType);
+        return new EnchantOperation(type, level, value, elementType, summary);
+    }
+
+    private int computeMagnitude(Entity baseItem, OperationType type, int level, ElementalDecorator.ElementType elementType)
+    {
+        return switch(type) {
+            case DAMAGE -> {
+                int baseAttack = Math.max(2, baseItem.attackValue);
+                yield Math.max(2, baseAttack / 3 + level * 3 + rng.nextInt(4));
+            }
+            case DEFENSE -> {
+                int baseDefense = Math.max(1, baseItem.defenseValue);
+                yield Math.max(2, baseDefense / 2 + level * 2 + rng.nextInt(3));
+            }
+            case LIFESTEAL -> 8 + level * 4 + rng.nextInt(6);
+            case CRITICAL -> Math.min(70, 12 + level * 6 + rng.nextInt(8));
+            case MANA -> 6 + level * 3 + rng.nextInt(5);
+            case HEALTH -> 10 + level * 4 + rng.nextInt(6);
+            case SPEED -> 1 + level + (rng.nextDouble() < 0.35 ? 1 : 0);
+            case ELEMENT -> 0;
+        };
+    }
+
+    private String buildSummary(OperationType type, int level, int value, ElementalDecorator.ElementType elementType)
+    {
+        String tier = "T" + level;
+        return switch(type) {
+            case DAMAGE -> String.format("%s %s (+%d ATK)", type.label, tier, value);
+            case DEFENSE -> String.format("%s %s (+%d DEF)", type.label, tier, value);
+            case LIFESTEAL -> String.format("%s %s (+%d%% leech)", type.label, tier, value);
+            case CRITICAL -> String.format("%s %s (+%d%% crit)", type.label, tier, value);
+            case MANA -> String.format("%s %s (+%d mana)", type.label, tier, value);
+            case HEALTH -> String.format("%s %s (+%d HP)", type.label, tier, value);
+            case SPEED -> String.format("%s %s (+%d SPD)", type.label, tier, value);
+            case ELEMENT -> String.format("%s %s (%s)", type.label, tier, formatElement(elementType));
+        };
+    }
+
+    private String formatElement(ElementalDecorator.ElementType elementType)
+    {
+        if(elementType == null) {
+            return "Element";
+        }
+        String name = elementType.name().toLowerCase();
+        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    private String buildOptionTitle(List<EnchantOperation> operations)
+    {
+        String prefix = ENCHANT_PREFIXES[rng.nextInt(ENCHANT_PREFIXES.length)];
+        String suffix = ENCHANT_SUFFIXES[rng.nextInt(ENCHANT_SUFFIXES.length)];
+        List<String> highlights = new ArrayList<>();
+        for(EnchantOperation op : operations) {
+            String highlight = op.type == OperationType.ELEMENT && op.elementType != null
+                ? formatElement(op.elementType)
+                : op.type.label.split(" ")[0];
+            if(!highlights.contains(highlight)) {
+                highlights.add(highlight);
+            }
+            if(highlights.size() == 2) {
+                break;
+            }
+        }
+        String focus = highlights.isEmpty() ? "" : " (" + String.join(" & ", highlights) + ")";
+        return prefix + " " + suffix + focus;
+    }
+
+    private Entity buildEnchantedItem(Entity baseItem, EnchantmentOption option)
+    {
+        if(baseItem == null || option == null) {
+            return null;
+        }
+        EquipmentBuilder builder = EquipmentBuilder.create(baseItem)
+            .withSlots(Math.max(baseItem.enchantmentSlots, option.slotsUsed()))
+            .withBudget(Integer.MAX_VALUE)
+            .enableAutoOptimize();
+
+        for(EnchantOperation op : option.operations) {
+            switch(op.type) {
+                case DAMAGE -> builder.withDamageBuff(op.value, op.level);
+                case DEFENSE -> builder.withDefenseBuff(op.value, op.level);
+                case LIFESTEAL -> builder.withLifeSteal(op.value, op.level);
+                case CRITICAL -> builder.withCriticalChance(op.value, op.level);
+                case ELEMENT -> builder.withElement(op.elementType, op.level);
+                case MANA -> builder.withMana(op.value, op.level);
+                case HEALTH -> builder.withHealth(op.value, op.level);
+                case SPEED -> builder.withSpeed(op.value, op.level);
+            }
+        }
+
+        return builder.build();
     }
     public int getItemIndexOnSlot(int slotCol, int slotRow)
     {
@@ -1266,6 +1707,10 @@ public class UI {
             if(gp.gameState == gp.sleepState)
             {
                 drawSleepScreen();
+            }
+            if(gp.gameState == gp.enchantState)
+            {
+                drawEnchantScreen();
             }
         }
     }
