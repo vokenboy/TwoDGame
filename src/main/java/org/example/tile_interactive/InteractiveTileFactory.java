@@ -17,7 +17,8 @@ public class InteractiveTileFactory {
             case "MetalPlate": return new IT_MetalPlate(gp, col, row);
             case "DryTree": return new IT_DryTree(gp, col, row);
             case "DestructibleWall": return new IT_DestructibleWall(gp, col, row);
-            default: return new InteractiveTile(gp, col, row);
+            default: return new IT_Default(gp, col, row);
         }
     }
 }
+
