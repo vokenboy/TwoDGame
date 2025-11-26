@@ -49,6 +49,7 @@ public class GamePanel extends JPanel implements Runnable {
     int FPS = 60;
 
     //SYSTEM
+    public EntityManager entityManager = new EntityManager(this);
     public TileManager tileM = new TileManager(this);
     public KeyHandler keyH = new KeyHandler(this);
     public EventHandler eHandler = new EventHandler(this);
@@ -208,30 +209,25 @@ public class GamePanel extends JPanel implements Runnable {
             player.update();
 
             //NPC
-            for(int i = 0; i < npc[1].length; i++)
-            {
-                if(npc[currentMap][i] != null)
-                {
-                    npc[currentMap][i].update();
+            var itNPC = entityManager.getNPCIterator();
+            while (itNPC.hasNext()) {
+                itNPC.next().update();
+            }
+
+
+            //MONSTER
+            var it = entityManager.getMonsterIterator();
+            while (it.hasNext()) {
+                Entity m = it.next();
+
+                if (m.alive && !m.dying) {
+                    m.update();
+                } else if (!m.alive) {
+                    m.checkDrop();
+                    entityManager.removeMonster(m);
                 }
             }
 
-            //MONSTER
-            for(int i = 0; i < monster[1].length; i++)
-            {
-                if(monster[currentMap][i] != null)
-                {
-                    if(monster[currentMap][i].alive == true && monster[currentMap][i].dying == false)
-                    {
-                        monster[currentMap][i].update();
-                    }
-                    if(monster[currentMap][i].alive == false)
-                    {
-                        monster[currentMap][i].checkDrop();
-                        monster[currentMap][i] = null;
-                    }
-                }
-            }
 
             //PROJECTILE
             for(int i = 0; i < projectile[1].length; i++)
@@ -337,30 +333,22 @@ public class GamePanel extends JPanel implements Runnable {
             entityList.add(player);
 
             //NPCs
-            for(int i = 0; i < npc[1].length; i++)
-            {
-                if(npc[currentMap][i] != null)
-                {
-                    entityList.add(npc[currentMap][i]);
-                }
+            var itNPC = entityManager.getNPCIterator();
+            while (itNPC.hasNext()) {
+                entityList.add(itNPC.next());
             }
 
+
             //OBJECTS
-            for(int i = 0; i < obj[1].length; i++)
-            {
-                if(obj[currentMap][i] != null)
-                {
-                    entityList.add(obj[currentMap][i]);
-                }
+            var itObj = entityManager.getObjectIterator();
+            while (itObj.hasNext()) {
+                entityList.add(itObj.next());
             }
 
             //MONSTERS
-            for(int i = 0; i < monster[1].length; i++)
-            {
-                if(monster[currentMap][i] != null)
-                {
-                    entityList.add(monster[currentMap][i]);
-                }
+            var itMon = entityManager.getMonsterIterator();
+            while (itMon.hasNext()) {
+                entityList.add(itMon.next());
             }
 
             //PROJECTILES
