@@ -1,6 +1,8 @@
 package org.example.main;
 
 import org.example.entity.Entity;
+import org.example.main.state.PlayState;
+import org.example.main.state.TitleState;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
@@ -119,7 +121,7 @@ public class UI {
             npc.dialogueIndex = 0;
             if(gp.gameState == gp.dialogueState)
             {
-                gp.gameState = gp.playState;
+                gp.setState(new PlayState(), gp.playState);
             }
             if(gp.gameState == gp.cutsceneState)
             {
@@ -372,7 +374,7 @@ public class UI {
         if(counter == 50) //the transition is done
         {
             counter = 0;
-            gp.gameState = gp.playState;
+            gp.setState(new PlayState(), gp.playState);
             gp.player.worldX =  gp.tileSize * gp.eHandler.tempCol;
             gp.player.worldY = gp.tileSize * gp.eHandler.tempRow;
             gp.currentMap = gp.eHandler.tempMap;
@@ -598,7 +600,7 @@ public class UI {
                 counter = 0;
                 gp.eManager.lighting.dayState = gp.eManager.lighting.day;
                 gp.eManager.lighting.dayCounter = 0;
-                gp.gameState = gp.playState;
+                gp.setState(new PlayState(), gp.playState);
                 gp.player.getImage();
             }
         }
@@ -1029,7 +1031,7 @@ public class UI {
             g2.drawString(">", textX-25,textY);
             if(gp.keyH.enterPressed == true)
             {
-                gp.gameState = gp.playState;
+                gp.setState(new PlayState(), gp.playState);
                 commandNum = 0;
             }
         }
@@ -1151,7 +1153,7 @@ public class UI {
             {
                 subState = 0;
                 gp.ui.titleScreenState = 0;
-                gp.gameState = gp.titleState;
+                gp.setState(new TitleState(), gp.titleState);
                 gp.resetGame(true);
                 gp.gameFacade.stopBackgroundMusic();
             }

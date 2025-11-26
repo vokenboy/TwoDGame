@@ -1,6 +1,7 @@
 package org.example.main;
 
 import org.example.entity.PlayerDummy;
+import org.example.main.state.PlayState;
 import org.example.monster.MON_SkeletonLord;
 import org.example.object.OBJ_BlueHeart;
 import org.example.object.OBJ_Door;
@@ -136,7 +137,8 @@ public class CutsceneManager {
             //Reset
             sceneNum = NA;
             scenePhase = 0;
-            gp.gameState = gp.playState;
+            gp.setState(new PlayState(), gp.playState);
+
 
             //Change the music
             gp.gameFacade.stopBackgroundMusic();
@@ -259,7 +261,7 @@ public class CutsceneManager {
                 scenePhase = 0;
 
                 //Transition to game again
-                gp.gameState = gp.playState;
+                gp.setState(new PlayState(), gp.playState);
                 gp.resetGame(false);
 
             }
