@@ -1,6 +1,7 @@
 package org.example.main;
 
 import org.example.data.Progress;
+import org.example.entity.ContainerItem;
 import org.example.factory.MonsterFactory;
 import org.example.factory.GreenMonsterFactory;
 import org.example.factory.RedMonsterFactory;
@@ -55,6 +56,14 @@ public class AssetSetter {
         gp.obj[mapNum][i] = new OBJ_Key(gp);
         gp.obj[mapNum][i].worldX = gp.tileSize * 38;
         gp.obj[mapNum][i].worldY = gp.tileSize * 40;
+        i++;
+        // Multi-item chest to exercise composite inventory
+        gp.obj[mapNum][i] = new OBJ_Chest(gp);
+        gp.obj[mapNum][i].worldX = gp.tileSize * 20;
+        gp.obj[mapNum][i].worldY = gp.tileSize * 22;
+        ((ContainerItem) gp.obj[mapNum][i]).addItem(new OBJ_Potion_Red(gp));
+        ((ContainerItem) gp.obj[mapNum][i]).addItem(new OBJ_Potion_Red(gp));
+        ((ContainerItem) gp.obj[mapNum][i]).addItem(new OBJ_Key(gp));
         i++;
 
         mapNum = 1;//adding object to second map

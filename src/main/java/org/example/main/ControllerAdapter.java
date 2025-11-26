@@ -8,7 +8,7 @@ public class ControllerAdapter implements Controls {
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
     private boolean pausePressed, characterPressed, mapPressed, escapePressed;
-    private boolean enterPressed, shotPressed, altShotPressed, spacePressed;
+    private boolean enterPressed, shotPressed, altShotPressed, spacePressed, interactPressed;
 
     private Controller controller;
     private static final float DEADZONE = 0.3f;
@@ -69,7 +69,10 @@ public class ControllerAdapter implements Controls {
             }
 
             switch (id) {
-                case "0" -> enterPressed = value == 1.0f;
+                case "0" -> {
+                    enterPressed = value == 1.0f;
+                    interactPressed = value == 1.0f; // map primary button to interact as well
+                }
                 case "1" -> shotPressed = value == 1.0f;
                 case "2" -> spacePressed = value == 1.0f;
                 case "3" -> pausePressed = value == 1.0f;
@@ -100,6 +103,8 @@ public class ControllerAdapter implements Controls {
     public boolean isShotPressed() { return shotPressed; }
     @Override
     public boolean isAltShotPressed() { return altShotPressed; }
+    @Override
+    public boolean isInteractPressed() { return interactPressed; }
     @Override
     public boolean isSpacePressed() { return spacePressed; }
     @Override

@@ -138,7 +138,7 @@ public class EventHandler{
     }
     public void healingPool(int gameState)
     {
-        if(gp.keyH.enterPressed == true)
+        if(gp.keyH.interactPressedOnce || gp.keyH.interactPressed)
         {
             gp.gameState = gameState;
             gp.player.attackCanceled = true;
@@ -153,7 +153,7 @@ public class EventHandler{
     }
     public void speak(Entity entity)
     {
-        if(gp.keyH.enterPressed == true)
+        if(gp.keyH.interactPressedOnce || gp.keyH.interactPressed)
         {
             gp.gameState = gp.dialogueState;
             gp.player.attackCanceled = true;

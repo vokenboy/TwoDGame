@@ -1,16 +1,15 @@
 package org.example.object;
 
+import org.example.entity.ContainerItem;
 import org.example.entity.Entity;
 import org.example.main.GamePanel;
 
-public class OBJ_Chest extends Entity {
+public class OBJ_Chest extends ContainerItem {
 
-    GamePanel gp;
     public static final String objName = "Chest";
     public OBJ_Chest(GamePanel gp)
     {
-        super(gp);
-        this.gp = gp;
+        super(gp, 8); // basic chest capacity
 
         type = type_obstacle;
         name = objName;
@@ -29,14 +28,14 @@ public class OBJ_Chest extends Entity {
     }
     public void setLoot(Entity loot)
     {
-        this.loot = loot;
-
+        addItem(loot);
         setDialogue();
     }
     public void setDialogue()
     {
-        dialogues[0][0] = "You open the chest and find a " + loot.name + "!\n...But you cannot carry any more!";
-        dialogues[1][0] = "You open the chest and find a " + loot.name + "!\nYou obtain the " + loot.name + "!";
+        String lootNames = describeContents();
+        dialogues[0][0] = "You open the chest and find " + lootNames + "!\n...But you cannot carry any more!";
+        dialogues[1][0] = "You open the chest and find " + lootNames + "!\nYou obtain " + lootNames + "!";
         dialogues[2][0] = "It's empty.";
     }
     public void interact()
@@ -44,17 +43,18 @@ public class OBJ_Chest extends Entity {
         if(opened == false)
         {
             gp.gameFacade.playSoundEffect(3);
-
-            if(gp.player.canObtainItem(loot) == false)
+            setDialogue();
+            boolean addedAny = transferToInventory(gp.player);
+            setDialogue();
+            if(addedAny && getChildren().isEmpty())
             {
-                startDialogue(this,0);
+                startDialogue(this,1);
+                down1 = image2;
+                opened = true;
             }
             else
             {
-                startDialogue(this,1);
-                //gp.player.inventory.add(loot); //canObtainItem() already adds item
-                down1 = image2;
-                opened = true;
+                startDialogue(this,0);
             }
         }
         else

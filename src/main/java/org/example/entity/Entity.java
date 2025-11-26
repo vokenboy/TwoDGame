@@ -9,11 +9,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
-public class Entity {
+public class Entity implements ItemComponent {
 
-    GamePanel gp;
+    protected GamePanel gp;
     public BufferedImage up1,up2,down1,down2,left1,left2,right1,right2;
     public BufferedImage attackUp1,attackUp2,attackDown1,attackDown2,attackLeft1,attackLeft2,attackRight1,attackRight2,guardUp,guardDown,guardLeft,guardRight;
     public BufferedImage image, image2, image3;
@@ -139,6 +141,21 @@ public class Entity {
         source.solidArea = new Rectangle(source.solidArea);
         source.attackArea = new Rectangle(source.attackArea);
         return source;
+    }
+
+    @Override
+    public boolean isContainer() {
+        return false;
+    }
+
+    @Override
+    public List<Entity> getChildren() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean transferToInventory(Player player) {
+        return player.canObtainItem(this);
     }
     public int getScreenX()
     {

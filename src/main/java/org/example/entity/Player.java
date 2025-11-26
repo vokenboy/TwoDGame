@@ -350,8 +350,10 @@ public class Player extends Entity {
             guardCounter++;
         }
         else if(keyH.upPressed == true || keyH.downPressed == true ||
-                keyH.leftPressed == true || keyH.rightPressed == true || keyH.enterPressed == true)
+                keyH.leftPressed == true || keyH.rightPressed == true || keyH.interactPressedOnce || keyH.interactPressed)
         {
+            boolean interactPressed = keyH.interactPressedOnce || keyH.interactPressed;
+
             if(keyH.upPressed == true)
             {
                 direction = "up";
@@ -391,7 +393,7 @@ public class Player extends Entity {
             gp.eHandler.checkEvent();
 
             // IF COLLISION IS FALSE, PLAYER CAN MOVE
-            if(collisionOn == false && keyH.enterPressed == false)   //Without this, player moves when you press ENTER
+            if(collisionOn == false && !interactPressed)   //Without this, player moves when you press ENTER
             {
                 switch (direction)
                 {
@@ -413,7 +415,7 @@ public class Player extends Entity {
                 }
             }
 
-            if(keyH.enterPressed == true && attackCanceled == false)
+            if(keyH.enterPressedOnce && attackCanceled == false)
             {
                 gp.gameFacade.playSoundEffect(7);
                 attacking = true;
@@ -421,7 +423,6 @@ public class Player extends Entity {
             }
 
             attackCanceled = false;
-            gp.keyH.enterPressed = false;
             guarding = false;
             guardCounter = 0;
 
@@ -565,7 +566,7 @@ public class Player extends Entity {
             //OBSTACLE
             else if(gp.obj[gp.currentMap][i].type == type_obstacle)
             {
-                if(keyH.enterPressed == true)
+                if(keyH.interactPressedOnce || keyH.interactPressed)
                 {
                     attackCanceled = true;
                     gp.obj[gp.currentMap][i].interact();
@@ -594,7 +595,7 @@ public class Player extends Entity {
     {
         if(i != 999)
         {
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.interactPressedOnce || gp.keyH.interactPressed)
             {
                 attackCanceled = true;
                 gp.npc[gp.currentMap][i].speak();

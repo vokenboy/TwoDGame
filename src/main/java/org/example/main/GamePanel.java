@@ -201,6 +201,9 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void update()
     {
+        // Read latest input before updating game logic
+        keyH.update();
+
         if(gameState == playState)
         {
             //PLAYER
@@ -287,8 +290,6 @@ public class GamePanel extends JPanel implements Runnable {
 
             eManager.update();
         }
-
-        keyH.update();
 
         if(gameState == pauseState)
         {

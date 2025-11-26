@@ -13,6 +13,7 @@ public interface Controls {
     boolean isCharacterPressed();
     boolean isMapPressed();
     boolean isEscapePressed();
+    boolean isInteractPressed();
 
     void update();
 }

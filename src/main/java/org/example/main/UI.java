@@ -88,10 +88,9 @@ public class UI {
         x += gp.tileSize;
         y += gp.tileSize;
 
+        boolean advance = gp.keyH.interactPressedOnce || gp.keyH.enterPressedOnce;
         if(npc.dialogues[npc.dialogueSet][npc.dialogueIndex] != null)
         {
-            //currentDialogue = npc.dialogues[npc.dialogueSet][npc.dialogueIndex];//For display text once, enable this and disable letter by letter.(Letter by letter: The if statement below there)
-
             char characters[] = npc.dialogues[npc.dialogueSet][npc.dialogueIndex].toCharArray();
 
             if(charIndex < characters.length)
@@ -103,14 +102,13 @@ public class UI {
 
                 charIndex++;
             }
-            if(gp.keyH.enterPressed == true)
+            if(advance)
             {
                 charIndex = 0;
                 combinedText = "";
                 if(gp.gameState == gp.dialogueState || gp.gameState == gp.cutsceneState)
                 {
                     npc.dialogueIndex++;
-                    gp.keyH.enterPressed = false;
                 }
             }
         }
@@ -478,7 +476,7 @@ public class UI {
             g2.drawString(text, x, y+34);
 
             //BUY AN ITEM
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.enterPressedOnce || gp.keyH.interactPressedOnce)
             {
                 if(npc.inventory.get(itemIndex).price > gp.player.coin) //not enough coin
                 {
@@ -553,7 +551,7 @@ public class UI {
             g2.drawString(text, x, y+34);
 
             //SELL AN ITEM
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.enterPressedOnce || gp.keyH.interactPressedOnce)
             {
                 if(gp.player.inventory.get(itemIndex) == gp.player.currentWeapon ||
                         gp.player.inventory.get(itemIndex) == gp.player.currentShield) //equipped items cant sell

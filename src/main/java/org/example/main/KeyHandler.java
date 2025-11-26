@@ -23,10 +23,11 @@ public class KeyHandler extends KeyAdapter {
     private final Controls controller;
     private final GamePanel gp;
     public boolean upPressed, downPressed, leftPressed, rightPressed;
-    public boolean enterPressed, shotKeyPressed, altShotKeyPressed, spacePressed;
+    public boolean enterPressed, enterPressedOnce, shotKeyPressed, altShotKeyPressed, spacePressed;
+    public boolean interactPressed, interactPressedOnce;
     private boolean prevPause, prevCharacter, prevMap, prevEscape;
     private boolean prevLeft, prevRight;
-    private boolean prevUp, prevDown, prevEnter;
+    private boolean prevUp, prevDown, prevEnter, prevInteract;
     private boolean prevShot, prevAltShot, prevSpace;
     public boolean showDebugText = false;
     public boolean godModeOn = false;
@@ -55,6 +56,9 @@ public class KeyHandler extends KeyAdapter {
         shotKeyPressed = keyboard.isShotPressed() || controller.isShotPressed();
         altShotKeyPressed = keyboard.isAltShotPressed() || controller.isAltShotPressed();
         spacePressed = keyboard.isSpacePressed() || controller.isSpacePressed();
+        enterPressedOnce = justPressed(enterPressed, prevEnter);
+        interactPressed = keyboard.isInteractPressed() || controller.isInteractPressed();
+        interactPressedOnce = justPressed(interactPressed, prevInteract);
 
         boolean pausePressed = keyboard.isPausePressed() || controller.isPausePressed();
         boolean characterPressed = keyboard.isCharacterPressed() || controller.isCharacterPressed();
@@ -86,6 +90,7 @@ public class KeyHandler extends KeyAdapter {
         prevLeft = leftPressed;
         prevRight = rightPressed;
         prevEnter = enterPressed;
+        prevInteract = interactPressed;
         prevShot = shotKeyPressed;
         prevAltShot = altShotKeyPressed;
         prevSpace = spacePressed;
@@ -98,7 +103,7 @@ public class KeyHandler extends KeyAdapter {
     private void handleTitleInput() {
         boolean up = justPressed(upPressed, prevUp);
         boolean down = justPressed(downPressed, prevDown);
-        boolean enter = justPressed(enterPressed, prevEnter);
+        boolean enter = enterPressedOnce;
 
         if (gp.ui.titleScreenState == 0) {
             if (up) {
@@ -171,7 +176,7 @@ public class KeyHandler extends KeyAdapter {
             moveRightCommand.execute(gp.player);
         }
 
-        if (justPressed(enterPressed, prevEnter)) {
+        if (enterPressedOnce) {
             attackCommand.execute(gp.player);
         }
         if (justPressed(shotKeyPressed, prevShot)) {
@@ -189,7 +194,7 @@ public class KeyHandler extends KeyAdapter {
     }
 
     private void handleDialogueInput() {
-        if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
+        if (enterPressedOnce) {
             gp.gameState = gp.playState;
         }
     }
@@ -199,7 +204,7 @@ public class KeyHandler extends KeyAdapter {
         boolean down = justPressed(downPressed, prevDown);
         boolean left = justPressed(leftPressed, prevLeft);
         boolean right = justPressed(rightPressed, prevRight);
-        boolean enter = justPressed(enterPressed, prevEnter);
+        boolean enter = enterPressedOnce || interactPressedOnce;
         boolean character = justPressed(
                 keyboard.isCharacterPressed() || controller.isCharacterPressed(),
                 prevCharacter
@@ -229,7 +234,7 @@ public class KeyHandler extends KeyAdapter {
     }
 
     private void handleOptionsInput() {
-        boolean enter = justPressed(enterPressed, prevEnter);
+        boolean enter = enterPressedOnce;
         boolean up = justPressed(upPressed, prevUp);
         boolean down = justPressed(downPressed, prevDown);
         boolean escape = justPressed(
@@ -277,7 +282,7 @@ public class KeyHandler extends KeyAdapter {
     private void handleGameOverInput() {
         boolean up = justPressed(upPressed, prevUp);
         boolean down = justPressed(downPressed, prevDown);
-        boolean enter = justPressed(enterPressed, prevEnter);
+        boolean enter = enterPressedOnce;
 
         if (up) {
             gp.ui.commandNum--;
@@ -306,13 +311,13 @@ public class KeyHandler extends KeyAdapter {
     }
 
     private void handleTradeInput() {
-        if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
+        if (enterPressedOnce || interactPressedOnce) {
             gp.gameState = gp.playState;
         }
     }
 
     private void handleMapInput() {
-        if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
+        if (enterPressedOnce) {
             gp.gameState = gp.playState;
         }
     }

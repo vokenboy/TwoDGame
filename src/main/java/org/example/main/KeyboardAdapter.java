@@ -8,7 +8,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
     private boolean upPressed, downPressed, leftPressed, rightPressed;
     private boolean pausePressed, characterPressed, mapPressed, escapePressed;
 
-    private boolean enterPressed, shotPressed, altShotPressed, spacePressed;
+    private boolean enterPressed, shotPressed, altShotPressed, spacePressed, interactPressed;
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -23,6 +23,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_F -> shotPressed = true;
             case KeyEvent.VK_G -> altShotPressed = true;
             case KeyEvent.VK_SPACE -> spacePressed = true;
+            case KeyEvent.VK_E -> interactPressed = true;
             case KeyEvent.VK_P -> pausePressed = true;
             case KeyEvent.VK_C -> characterPressed = true;
             case KeyEvent.VK_M -> mapPressed = true;
@@ -43,6 +44,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_F -> shotPressed = false;
             case KeyEvent.VK_G -> altShotPressed = false;
             case KeyEvent.VK_SPACE -> spacePressed = false;
+            case KeyEvent.VK_E -> interactPressed = false;
             case KeyEvent.VK_P -> pausePressed = false;
             case KeyEvent.VK_C -> characterPressed = false;
             case KeyEvent.VK_M -> mapPressed = false;
@@ -69,6 +71,9 @@ public class KeyboardAdapter implements Controls, KeyListener {
     public boolean isAltShotPressed() {
         return altShotPressed;
     }
+
+    @Override
+    public boolean isInteractPressed() { return interactPressed; }
 
     @Override
     public boolean isSpacePressed() { return spacePressed; }
