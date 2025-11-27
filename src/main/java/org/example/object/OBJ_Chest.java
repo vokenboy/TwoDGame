@@ -34,9 +34,7 @@ public class OBJ_Chest extends ContainerItem {
     public void setDialogue()
     {
         String lootNames = describeContents();
-        dialogues[0][0] = "You open the chest and find " + lootNames + "!\n...But you cannot carry any more!";
-        dialogues[1][0] = "You open the chest and find " + lootNames + "!\nYou obtain " + lootNames + "!";
-        dialogues[2][0] = "It's empty.";
+        dialogues[0][0] = "You obtain " + lootNames + "!";
     }
     public void interact()
     {
