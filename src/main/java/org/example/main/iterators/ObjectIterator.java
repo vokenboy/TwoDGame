@@ -1,29 +1,45 @@
 package org.example.main.iterators;
 
 import org.example.entity.Entity;
+import org.example.main.GamePanel;
 
 public class ObjectIterator implements EntityIterator {
 
+    private final GamePanel gp;
     private final Entity[][] objects;
     private final int map;
     private int index = 0;
+    private Entity nextObject;
 
-    public ObjectIterator(Entity[][] objects, int map) {
+    public ObjectIterator(GamePanel gp, Entity[][] objects, int map) {
+        this.gp = gp;
         this.objects = objects;
         this.map = map;
+        advanceToNextValid();
     }
 
     @Override
     public boolean hasNext() {
-        while (index < objects[map].length) {
-            if (objects[map][index] != null) return true;
-            index++;
-        }
-        return false;
+        return nextObject != null;
     }
 
     @Override
     public Entity next() {
-        return objects[map][index++];
+        Entity current = nextObject;
+        advanceToNextValid();
+        return current;
+    }
+
+    private void advanceToNextValid() {
+        nextObject = null;
+
+        while (index < objects[map].length) {
+            Entity e = objects[map][index++];
+
+            if (e != null && e.inCamera()) {
+                nextObject = e;
+                break;
+            }
+        }
     }
 }

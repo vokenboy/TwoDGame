@@ -12,15 +12,15 @@ public class EntityManager {
     }
 
     public EntityIterator getMonsterIterator() {
-        return new MonsterIterator(gp.monster, gp.currentMap);
+        return new MonsterIterator(gp, gp.monster, gp.currentMap);
     }
 
     public EntityIterator getNPCIterator() {
-        return new NPCIterator(gp.npc, gp.currentMap);
+        return new NPCIterator(gp, gp.npc, gp.currentMap);
     }
 
     public EntityIterator getObjectIterator() {
-        return new ObjectIterator(gp.obj, gp.currentMap);
+        return new ObjectIterator(gp, gp.obj, gp.currentMap);
     }
 
     public void removeMonster(Entity m) {
