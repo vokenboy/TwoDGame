@@ -341,16 +341,7 @@ public class Entity {
     public void checkCollision()
     {
         collisionOn = false;
-        gp.cChecker.checkTile(this);
-        gp.cChecker.checkObject(this,false);
-        gp.cChecker.checkEntity(this, gp.npc);
-        gp.cChecker.checkEntity(this, gp.monster);
-        gp.cChecker.checkEntity(this,gp.iTile);
-        boolean contactPlayer = gp.cChecker.checkPlayer(this);
-        if(this.type == type_monster && contactPlayer == true)
-        {
-            damagePlayer(attack);
-        }
+        gp.cChecker.processCollision(this);
     }
     public void update()
     {
