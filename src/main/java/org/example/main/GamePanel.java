@@ -10,6 +10,9 @@ import org.example.tile.TileManager;
 import org.example.tile_interactive.InteractiveTile;
 import org.example.Main;
 import org.example.tile_interactive.InteractiveTileFactory;
+import org.example.main.sound.SoundInterface;
+import org.example.main.sound.RealSound;
+import org.example.main.sound.SoundProxy;
 
 import javax.swing.JPanel;
 import java.awt.*;
@@ -52,8 +55,8 @@ public class GamePanel extends JPanel implements Runnable {
     public TileManager tileM = new TileManager(this);
     public KeyHandler keyH = new KeyHandler(this);
     public EventHandler eHandler = new EventHandler(this);
-    Sound music = new Sound(); // Created 2 different objects for Sound Effect and Music. If you use 1 object SE or Music stops sometimes.
-    Sound se = new Sound();
+    public SoundInterface music;
+    public SoundInterface se;
     public GameFacade gameFacade; // Facade Pattern - unified interface for audio and collision
     public CollisionChecker cChecker = new CollisionChecker(this);
     public AssetSetter  aSetter = new AssetSetter(this);
@@ -110,11 +113,19 @@ public class GamePanel extends JPanel implements Runnable {
     {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight)); // JPanel size
         this.setBackground(Color.black);
-        this.setDoubleBuffered(true); // improve game's rendering performance
+        this.setDoubleBuffered(true);
         this.setFocusable(true);
 
         this.iTileFactory = new InteractiveTileFactory(this);
-        this.gameFacade = new GameFacade(this, music, se); // Initialize facade
+
+        // ---- PROXY SETUP ----
+        RealSound realMusic = new RealSound(new Sound());
+        RealSound realSE = new RealSound(new Sound());
+
+        this.music = new SoundProxy(realMusic, this);
+        this.se = new SoundProxy(realSE, this);
+
+        this.gameFacade = new GameFacade(this, music, se);
     }
 
     public void setupGame()

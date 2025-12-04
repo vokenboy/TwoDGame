@@ -1,17 +1,18 @@
 package org.example.main;
 
 import org.example.entity.Entity;
+import org.example.main.sound.SoundInterface;
 
 public class GameFacade {
 
     // Subsystems
-    private GamePanel gp;
-    private Sound music;
-    private Sound se;
-    private CollisionChecker cChecker;
-    private EventHandler eHandler;
+    private final GamePanel gp;
+    private final SoundInterface music;
+    private final SoundInterface se;
+    private final CollisionChecker cChecker;
+    private final EventHandler eHandler;
 
-    public GameFacade(GamePanel gp, Sound music, Sound se) {
+    public GameFacade(GamePanel gp, SoundInterface music, SoundInterface se) {
         this.gp = gp;
         this.music = music;
         this.se = se;
@@ -24,9 +25,8 @@ public class GameFacade {
     // ============================================
 
     public void playBackgroundMusic(int index) {
-        stopBackgroundMusic();  // stop any currently playing music
+        stopBackgroundMusic();
         music.setFile(index);
-        music.play();
         music.loop();
     }
 
@@ -40,26 +40,21 @@ public class GameFacade {
     }
 
     public void setMusicVolume(int scale) {
-        music.volumeScale = scale;
-        if(music.clip != null) {
-            music.checkVolume();
-        }
+        music.setVolumeScale(scale);
     }
 
     public void setSoundEffectVolume(int scale) {
-        se.volumeScale = scale;
-        if(se.clip != null) {
-            se.checkVolume();
-        }
+        se.setVolumeScale(scale);
     }
 
     public int getMusicVolume() {
-        return music.volumeScale;
+        return music.getVolumeScale();
     }
 
     public int getSoundEffectVolume() {
-        return se.volumeScale;
+        return se.getVolumeScale();
     }
+
 
     public void playAreaMusic(int area, int outside, int indoor, int dungeon) {
         stopBackgroundMusic();
