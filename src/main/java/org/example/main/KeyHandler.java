@@ -8,6 +8,7 @@ import org.example.commands.MoveLeftCommand;
 import org.example.commands.MoveRightCommand;
 import org.example.commands.MoveUpCommand;
 import org.example.commands.AltCastSpellCommand;
+import org.example.multiplayer.MultiplayerBootstrap;
 import java.awt.event.KeyAdapter;
 
 public class KeyHandler extends KeyAdapter {
@@ -117,9 +118,11 @@ public class KeyHandler extends KeyAdapter {
                 switch (gp.ui.commandNum) {
                     case 0 -> gp.ui.titleScreenState = 1;
                     case 1 -> {
-                        gp.saveLoad.load();
-                        gp.gameState = gp.playState;
-                        gp.gameFacade.playSoundEffect(0);
+                        boolean started = MultiplayerBootstrap.prompt(gp);
+                        if (started) {
+                            gp.gameState = gp.playState;
+                            gp.gameFacade.playSoundEffect(0);
+                        }
                     }
                     case 2 -> System.exit(0);
                 }

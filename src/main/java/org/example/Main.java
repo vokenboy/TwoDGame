@@ -2,7 +2,10 @@ package org.example;
 
 import javax.swing.*;
 import org.example.main.GamePanel;
+
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class Main {
 
@@ -16,6 +19,12 @@ public class Main {
         new Main().setIcon();
         GamePanel gamePanel = new GamePanel();
         window.add(gamePanel);
+        window.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                gamePanel.shutdown();
+            }
+        });
 
         gamePanel.getConfig().loadConfig();
         if(gamePanel.fullScreenOn == true)

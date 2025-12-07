@@ -1254,7 +1254,7 @@ public class UI {
                 g2.drawString(">",x - gp.tileSize, y);
             }
 
-            text = "LOAD GAME";
+            text = "MULTIPLAYER";
             x = getXforCenteredText(text);
             y += gp.tileSize;
             g2.drawString(text,x,y);

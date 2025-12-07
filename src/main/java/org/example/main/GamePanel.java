@@ -5,6 +5,7 @@ import org.example.data.SaveLoad;
 import org.example.entity.Entity;
 import org.example.entity.Player;
 import org.example.environment.EnvironmentManager;
+import org.example.multiplayer.MultiplayerManager;
 import org.example.tile.Map;
 import org.example.tile.TileManager;
 import org.example.tile_interactive.InteractiveTile;
@@ -65,6 +66,7 @@ public class GamePanel extends JPanel implements Runnable {
     Map map = new Map(this);
     SaveLoad saveLoad = new SaveLoad(this);
     public EntityGenerator eGenerator = new EntityGenerator(this);
+    private final MultiplayerManager multiplayerManager = new MultiplayerManager(this);
     public CutsceneManager csManager = new CutsceneManager(this);
     Thread gameThread;
 
@@ -286,6 +288,7 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         keyH.update();
+        multiplayerManager.tick();
 
         if(gameState == pauseState)
         {
@@ -331,6 +334,8 @@ public class GamePanel extends JPanel implements Runnable {
             //ADD ENTITIES TO THE LIST
             //PLAYER
             entityList.add(player);
+            entityList.addAll(multiplayerManager.getRenderablePlayers());
+            entityList.addAll(multiplayerManager.getRemoteWorldEntities());
 
             //NPCs
             var itNPC = entityManager.getNPCIterator();
@@ -435,6 +440,14 @@ public class GamePanel extends JPanel implements Runnable {
 
     public Config getConfig() {
         return config;
+    }
+
+    public MultiplayerManager getMultiplayerManager() {
+        return multiplayerManager;
+    }
+
+    public void shutdown() {
+        multiplayerManager.shutdown();
     }
 
     public void drawToScreen()
