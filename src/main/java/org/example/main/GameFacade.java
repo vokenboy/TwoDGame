@@ -2,6 +2,7 @@ package org.example.main;
 
 import org.example.entity.Entity;
 import org.example.main.sound.SoundInterface;
+import org.example.main.sound.SoundProxy;
 
 public class GameFacade {
 
@@ -45,6 +46,11 @@ public class GameFacade {
 
     public void setSoundEffectVolume(int scale) {
         se.setVolumeScale(scale);
+    }
+
+    public void resetAudioState() {
+        if (music instanceof SoundProxy proxyMusic) proxyMusic.fullReset();
+        if (se instanceof SoundProxy proxySe) proxySe.fullReset();
     }
 
     public int getMusicVolume() {

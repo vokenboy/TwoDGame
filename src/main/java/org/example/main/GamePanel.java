@@ -149,6 +149,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void resetGame(boolean restart)
     {
         gameFacade.stopBackgroundMusic();
+        gameFacade.resetAudioState();
         currentArea = outside;
         removeTempEntity();
         bossBattleOn = false;
@@ -165,6 +166,7 @@ public class GamePanel extends JPanel implements Runnable {
             aSetter.setInteractiveTile();
             eManager.lighting.resetDay();
             gameFacade.stopBackgroundMusic();
+            gameFacade.resetAudioState();
         }
     }
 
@@ -320,6 +322,8 @@ public class GamePanel extends JPanel implements Runnable {
         //TITLE SCREEN
         if(gameState == titleState)
         {
+            gameFacade.stopBackgroundMusic();
+            gameFacade.resetAudioState();
             ui.draw(g2);
         }
         //MAP SCREEN
