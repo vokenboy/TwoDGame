@@ -8,6 +8,10 @@ import org.example.commands.MoveLeftCommand;
 import org.example.commands.MoveRightCommand;
 import org.example.commands.MoveUpCommand;
 import org.example.commands.AltCastSpellCommand;
+import org.example.main.state.MapState;
+import org.example.main.state.PlayState;
+import org.example.main.state.TitleState;
+
 import java.awt.event.KeyAdapter;
 
 public class KeyHandler extends KeyAdapter {
@@ -117,7 +121,7 @@ public class KeyHandler extends KeyAdapter {
                     case 0 -> gp.ui.titleScreenState = 1;
                     case 1 -> {
                         gp.saveLoad.load();
-                        gp.gameState = gp.playState;
+                        gp.setState(new PlayState(), gp.playState);
                         gp.gameFacade.playSoundEffect(0);
                     }
                     case 2 -> System.exit(0);
@@ -149,7 +153,7 @@ public class KeyHandler extends KeyAdapter {
                         return;
                     }
                 }
-                gp.gameState = gp.playState;
+                gp.setState(new PlayState(), gp.playState);
                 gp.gameFacade.playSoundEffect(0);
             }
         }
@@ -158,7 +162,7 @@ public class KeyHandler extends KeyAdapter {
     private void handlePlayInput(boolean pausePressed, boolean characterPressed, boolean mapPressed, boolean escapePressed) {
         if (justPressed(pausePressed, prevPause)) gp.gameState = gp.pauseState;
         if (justPressed(characterPressed, prevCharacter)) gp.gameState = gp.characterState;
-        if (justPressed(mapPressed, prevMap)) gp.gameState = gp.mapState;
+        if (justPressed(mapPressed, prevMap)) gp.setState(new MapState(), gp.mapState);
         if (justPressed(escapePressed, prevEscape)) gp.gameState = gp.optionsState;
 
         if (upPressed) {
@@ -185,12 +189,12 @@ public class KeyHandler extends KeyAdapter {
 
     private void handlePauseInput() {
         if (justPressed(keyboard.isPausePressed() || controller.isPausePressed(), prevPause))
-            gp.gameState = gp.playState;
+            gp.setState(new PlayState(), gp.playState);
     }
 
     private void handleDialogueInput() {
         if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
-            gp.gameState = gp.playState;
+            gp.setState(new PlayState(), gp.playState);
         }
     }
 
@@ -225,7 +229,8 @@ public class KeyHandler extends KeyAdapter {
             gp.player.selectItem();
             gp.gameFacade.playSoundEffect(9);
         }
-        if (character) gp.gameState = gp.playState;
+        if (character) gp.setState(new PlayState(), gp.playState);
+
     }
 
     private void handleOptionsInput() {
@@ -263,13 +268,12 @@ public class KeyHandler extends KeyAdapter {
         }
 
         if (enter && selected == 4) {
-            gp.gameState = gp.titleState;
-            gp.gameFacade.stopBackgroundMusic();
+            gp.setState(new TitleState(), gp.titleState);            gp.gameFacade.stopBackgroundMusic();
             gp.gameFacade.playSoundEffect(9);
         }
 
         if ((enter && selected == 5) || escape) {
-            gp.gameState = gp.playState;
+            gp.setState(new PlayState(), gp.playState);
             gp.gameFacade.playSoundEffect(9);
         }
     }
@@ -293,12 +297,12 @@ public class KeyHandler extends KeyAdapter {
         if (enter) {
             switch (gp.ui.commandNum) {
                 case 0 -> {
-                    gp.gameState = gp.playState;
+                    gp.setState(new PlayState(), gp.playState);
                     gp.resetGame(false);
                     gp.gameFacade.playBackgroundMusic(0);                }
                 case 1 -> {
                     gp.ui.titleScreenState = 0;
-                    gp.gameState = gp.titleState;
+                    gp.setState(new TitleState(), gp.titleState);
                     gp.resetGame(true);
                 }
             }
@@ -307,13 +311,13 @@ public class KeyHandler extends KeyAdapter {
 
     private void handleTradeInput() {
         if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
-            gp.gameState = gp.playState;
+            gp.setState(new PlayState(), gp.playState);
         }
     }
 
     private void handleMapInput() {
         if (justPressed(keyboard.isEnterPressed() || controller.isEnterPressed(), prevEnter)) {
-            gp.gameState = gp.playState;
+            gp.setState(new PlayState(), gp.playState);
         }
     }
 }

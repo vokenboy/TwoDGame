@@ -5,57 +5,55 @@ import org.example.main.GamePanel;
 
 import java.awt.*;
 
-public class IT_DryTree extends InteractiveTile{
-
-    GamePanel gp;
+public final class IT_DryTree extends InteractiveTile {
 
     public IT_DryTree(GamePanel gp, int col, int row) {
         super(gp, col, row);
-        this.gp = gp;
+    }
 
-        this.worldX = gp.tileSize * col;
-        this.worldY = gp.tileSize * row;
+    @Override
+    protected void loadSprite() {
+        down1 = setup("/tiles_interactive/drytree", gp.tileSize, gp.tileSize);
+    }
 
-        down1 = setup("/tiles_interactive/drytree",gp.tileSize,gp.tileSize);
+    @Override
+    protected void setupProperties() {
         destructible = true;
         life = 2;
     }
-    public boolean isCorrectItem(Entity entity)
-    {
-        boolean isCorrectItem = false;
-        if(entity.currentWeapon.type == type_axe)
-        {
-            isCorrectItem = true;
-        }
-        return isCorrectItem;
+
+    @Override
+    public boolean isCorrectItem(Entity entity) {
+        return entity.currentWeapon.type == type_axe;
     }
-    public void playSE()
-    {
+
+    @Override
+    public void playSE() {
         gp.gameFacade.playSoundEffect(11);
     }
-    public InteractiveTile getDestroyedForm()
-    {
-        InteractiveTile tile = new IT_Trunk(gp, worldX / gp.tileSize, worldY / gp.tileSize);
-        return tile;
+
+    @Override
+    public InteractiveTile getDestroyedForm() {
+        return new IT_Trunk(gp, worldX / gp.tileSize, worldY / gp.tileSize);
     }
-    public Color getParticleColor()
-    {
-        Color color = new Color(65,50,30);
-        return color;
+
+    @Override
+    public Color getParticleColor() {
+        return new Color(65, 50, 30);
     }
-    public int getParticleSize()
-    {
-        int size = 6; //pixels
-        return size;
+
+    @Override
+    public int getParticleSize() {
+        return 6;
     }
-    public int getParticleSpeed()
-    {
-        int speed = 1;
-        return speed;
+
+    @Override
+    public int getParticleSpeed() {
+        return 1;
     }
-    public int getParticleMaxLife()
-    {
-        int maxLife = 20;
-        return maxLife;
+
+    @Override
+    public int getParticleMaxLife() {
+        return 20;
     }
 }
