@@ -23,10 +23,10 @@ public class KeyHandler extends KeyAdapter {
     private final Controls controller;
     private final GamePanel gp;
     public boolean upPressed, downPressed, leftPressed, rightPressed;
-    public boolean enterPressed, shotKeyPressed, altShotKeyPressed, spacePressed;
+    public boolean enterPressed, shotKeyPressed, altShotKeyPressed, spacePressed, achievementsPressed;
     public boolean enterOnce;
     public boolean interactPressed, interactOnce;
-    private boolean prevPause, prevCharacter, prevMap, prevEscape;
+    private boolean prevPause, prevCharacter, prevMap, prevEscape, prevAchievements;
     private boolean prevLeft, prevRight;
     private boolean prevUp, prevDown, prevEnter, prevInteract;
     private boolean prevShot, prevAltShot, prevSpace;
@@ -58,6 +58,7 @@ public class KeyHandler extends KeyAdapter {
         shotKeyPressed = keyboard.isShotPressed() || controller.isShotPressed();
         altShotKeyPressed = keyboard.isAltShotPressed() || controller.isAltShotPressed();
         spacePressed = keyboard.isSpacePressed() || controller.isSpacePressed();
+        achievementsPressed = keyboard.isAchievementsPressed() || controller.isAchievementsPressed();
         enterOnce = justPressed(enterPressed, prevEnter);
         interactOnce = justPressed(interactPressed, prevInteract);
 
@@ -65,11 +66,12 @@ public class KeyHandler extends KeyAdapter {
         boolean characterPressed = keyboard.isCharacterPressed() || controller.isCharacterPressed();
         boolean mapPressed = keyboard.isMapPressed() || controller.isMapPressed();
         boolean escapePressed = keyboard.isEscapePressed() || controller.isEscapePressed();
+        boolean achievementsToggle = justPressed(achievementsPressed, prevAchievements);
 
         if (gp.gameState == gp.titleState) {
             handleTitleInput();
         } else if (gp.gameState == gp.playState) {
-            handlePlayInput(pausePressed, characterPressed, mapPressed, escapePressed);
+            handlePlayInput(pausePressed, characterPressed, mapPressed, achievementsToggle, escapePressed);
         } else if (gp.gameState == gp.pauseState) {
             handlePauseInput();
         } else if (gp.gameState == gp.dialogueState || gp.gameState == gp.cutsceneState) {
@@ -84,6 +86,8 @@ public class KeyHandler extends KeyAdapter {
             handleTradeInput();
         } else if (gp.gameState == gp.mapState) {
             handleMapInput();
+        } else if (gp.gameState == gp.achievementsState) {
+            handleAchievementsInput(achievementsToggle, escapePressed);
         } else if(gp.gameState == gp.enchantState) {
             handleEnchantInput();
         }
@@ -100,6 +104,7 @@ public class KeyHandler extends KeyAdapter {
         prevCharacter = characterPressed;
         prevMap = mapPressed;
         prevEscape = escapePressed;
+        prevAchievements = achievementsPressed;
     }
 
     private void handleTitleInput() {
@@ -162,10 +167,11 @@ public class KeyHandler extends KeyAdapter {
         }
     }
 
-    private void handlePlayInput(boolean pausePressed, boolean characterPressed, boolean mapPressed, boolean escapePressed) {
+    private void handlePlayInput(boolean pausePressed, boolean characterPressed, boolean mapPressed, boolean achievementsToggle, boolean escapePressed) {
         if (justPressed(pausePressed, prevPause)) gp.gameState = gp.pauseState;
         if (justPressed(characterPressed, prevCharacter)) gp.gameState = gp.characterState;
         if (justPressed(mapPressed, prevMap)) gp.gameState = gp.mapState;
+        if (achievementsToggle) gp.gameState = gp.achievementsState;
         if (justPressed(escapePressed, prevEscape)) gp.gameState = gp.optionsState;
 
         if (upPressed) {
@@ -323,6 +329,12 @@ public class KeyHandler extends KeyAdapter {
     private void handleMapInput() {
         // Toggle map only with M
         if (justPressed(keyboard.isMapPressed() || controller.isMapPressed(), prevMap)) {
+            gp.gameState = gp.playState;
+        }
+    }
+
+    private void handleAchievementsInput(boolean achievementsToggle, boolean escapePressed) {
+        if (achievementsToggle || justPressed(escapePressed, prevEscape)) {
             gp.gameState = gp.playState;
         }
     }

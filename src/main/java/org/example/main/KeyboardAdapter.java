@@ -6,7 +6,7 @@ import java.awt.event.KeyListener;
 public class KeyboardAdapter implements Controls, KeyListener {
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
-    private boolean pausePressed, characterPressed, mapPressed, escapePressed;
+    private boolean pausePressed, characterPressed, mapPressed, escapePressed, achievementsPressed;
 
     private boolean enterPressed, interactPressed, shotPressed, altShotPressed, spacePressed;
 
@@ -28,6 +28,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_C -> characterPressed = true;
             case KeyEvent.VK_M -> mapPressed = true;
             case KeyEvent.VK_ESCAPE -> escapePressed = true;
+            case KeyEvent.VK_H -> achievementsPressed = true;
         }
     }
 
@@ -49,6 +50,7 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_C -> characterPressed = false;
             case KeyEvent.VK_M -> mapPressed = false;
             case KeyEvent.VK_ESCAPE -> escapePressed = false;
+            case KeyEvent.VK_H -> achievementsPressed = false;
         }
     }
 
@@ -84,6 +86,8 @@ public class KeyboardAdapter implements Controls, KeyListener {
     public boolean isMapPressed() { return mapPressed; }
     @Override
     public boolean isEscapePressed() { return escapePressed; }
+    @Override
+    public boolean isAchievementsPressed() { return achievementsPressed; }
 
 
     @Override
