@@ -1,5 +1,7 @@
 package org.example.main;
 
+import java.awt.event.KeyAdapter;
+import org.example.commands.AltCastSpellCommand;
 import org.example.commands.AttackCommand;
 import org.example.commands.CastSpellCommand;
 import org.example.commands.Command;
@@ -7,8 +9,6 @@ import org.example.commands.MoveDownCommand;
 import org.example.commands.MoveLeftCommand;
 import org.example.commands.MoveRightCommand;
 import org.example.commands.MoveUpCommand;
-import org.example.commands.AltCastSpellCommand;
-import java.awt.event.KeyAdapter;
 
 public class KeyHandler extends KeyAdapter {
 
@@ -54,25 +54,38 @@ public class KeyHandler extends KeyAdapter {
         rightPressed = keyboard.isRightPressed() || controller.isRightPressed();
 
         enterPressed = keyboard.isEnterPressed() || controller.isEnterPressed();
-        interactPressed = keyboard.isInteractPressed() || controller.isInteractPressed();
+        interactPressed =
+            keyboard.isInteractPressed() || controller.isInteractPressed();
         shotKeyPressed = keyboard.isShotPressed() || controller.isShotPressed();
-        altShotKeyPressed = keyboard.isAltShotPressed() || controller.isAltShotPressed();
+        altShotKeyPressed =
+            keyboard.isAltShotPressed() || controller.isAltShotPressed();
         spacePressed = keyboard.isSpacePressed() || controller.isSpacePressed();
         enterOnce = justPressed(enterPressed, prevEnter);
         interactOnce = justPressed(interactPressed, prevInteract);
 
-        boolean pausePressed = keyboard.isPausePressed() || controller.isPausePressed();
-        boolean characterPressed = keyboard.isCharacterPressed() || controller.isCharacterPressed();
-        boolean mapPressed = keyboard.isMapPressed() || controller.isMapPressed();
-        boolean escapePressed = keyboard.isEscapePressed() || controller.isEscapePressed();
+        boolean pausePressed =
+            keyboard.isPausePressed() || controller.isPausePressed();
+        boolean characterPressed =
+            keyboard.isCharacterPressed() || controller.isCharacterPressed();
+        boolean mapPressed =
+            keyboard.isMapPressed() || controller.isMapPressed();
+        boolean escapePressed =
+            keyboard.isEscapePressed() || controller.isEscapePressed();
 
         if (gp.gameState == gp.titleState) {
             handleTitleInput();
         } else if (gp.gameState == gp.playState) {
-            handlePlayInput(pausePressed, characterPressed, mapPressed, escapePressed);
+            handlePlayInput(
+                pausePressed,
+                characterPressed,
+                mapPressed,
+                escapePressed
+            );
         } else if (gp.gameState == gp.pauseState) {
             handlePauseInput();
-        } else if (gp.gameState == gp.dialogueState || gp.gameState == gp.cutsceneState) {
+        } else if (
+            gp.gameState == gp.dialogueState || gp.gameState == gp.cutsceneState
+        ) {
             handleDialogueInput();
         } else if (gp.gameState == gp.characterState) {
             handleCharacterInput();
@@ -84,7 +97,7 @@ public class KeyHandler extends KeyAdapter {
             handleTradeInput();
         } else if (gp.gameState == gp.mapState) {
             handleMapInput();
-        } else if(gp.gameState == gp.enchantState) {
+        } else if (gp.gameState == gp.enchantState) {
             handleEnchantInput();
         }
 
@@ -130,9 +143,7 @@ public class KeyHandler extends KeyAdapter {
                     case 2 -> System.exit(0);
                 }
             }
-        }
-
-        else if (gp.ui.titleScreenState == 1) {
+        } else if (gp.ui.titleScreenState == 1) {
             int maxClasses = 3; // Fighter, Thief, Sorcerer, Back (0–3)
 
             if (up) {
@@ -162,11 +173,18 @@ public class KeyHandler extends KeyAdapter {
         }
     }
 
-    private void handlePlayInput(boolean pausePressed, boolean characterPressed, boolean mapPressed, boolean escapePressed) {
+    private void handlePlayInput(
+        boolean pausePressed,
+        boolean characterPressed,
+        boolean mapPressed,
+        boolean escapePressed
+    ) {
         if (justPressed(pausePressed, prevPause)) gp.gameState = gp.pauseState;
-        if (justPressed(characterPressed, prevCharacter)) gp.gameState = gp.characterState;
+        if (justPressed(characterPressed, prevCharacter)) gp.gameState =
+            gp.characterState;
         if (justPressed(mapPressed, prevMap)) gp.gameState = gp.mapState;
-        if (justPressed(escapePressed, prevEscape)) gp.gameState = gp.optionsState;
+        if (justPressed(escapePressed, prevEscape)) gp.gameState =
+            gp.optionsState;
 
         if (upPressed) {
             moveUpCommand.execute(gp.player);
@@ -187,12 +205,15 @@ public class KeyHandler extends KeyAdapter {
         if (justPressed(altShotKeyPressed, prevAltShot)) {
             altCastSpellCommand.execute(gp.player);
         }
-
     }
 
     private void handlePauseInput() {
-        if (justPressed(keyboard.isPausePressed() || controller.isPausePressed(), prevPause))
-            gp.gameState = gp.playState;
+        if (
+            justPressed(
+                keyboard.isPausePressed() || controller.isPausePressed(),
+                prevPause
+            )
+        ) gp.gameState = gp.playState;
     }
 
     private void handleDialogueInput() {
@@ -208,8 +229,8 @@ public class KeyHandler extends KeyAdapter {
         boolean right = justPressed(rightPressed, prevRight);
         boolean enter = interactOnce;
         boolean character = justPressed(
-                keyboard.isCharacterPressed() || controller.isCharacterPressed(),
-                prevCharacter
+            keyboard.isCharacterPressed() || controller.isCharacterPressed(),
+            prevCharacter
         );
 
         if (up && gp.ui.playerSlotRow > 0) {
@@ -240,8 +261,8 @@ public class KeyHandler extends KeyAdapter {
         boolean up = justPressed(upPressed, prevUp);
         boolean down = justPressed(downPressed, prevDown);
         boolean escape = justPressed(
-                keyboard.isEscapePressed() || controller.isEscapePressed(),
-                prevEscape
+            keyboard.isEscapePressed() || controller.isEscapePressed(),
+            prevEscape
         );
 
         int maxOptions = 5;
@@ -302,7 +323,8 @@ public class KeyHandler extends KeyAdapter {
                 case 0 -> {
                     gp.gameState = gp.playState;
                     gp.resetGame(false);
-                    gp.gameFacade.playBackgroundMusic(0);                }
+                    gp.gameFacade.playBackgroundMusic(0);
+                }
                 case 1 -> {
                     gp.ui.titleScreenState = 0;
                     gp.gameState = gp.titleState;
@@ -314,7 +336,10 @@ public class KeyHandler extends KeyAdapter {
 
     private void handleTradeInput() {
         // Close trade with interact or escape
-        boolean escape = justPressed(keyboard.isEscapePressed() || controller.isEscapePressed(), prevEscape);
+        boolean escape = justPressed(
+            keyboard.isEscapePressed() || controller.isEscapePressed(),
+            prevEscape
+        );
         if (interactOnce || escape) {
             gp.gameState = gp.playState;
         }
@@ -322,7 +347,12 @@ public class KeyHandler extends KeyAdapter {
 
     private void handleMapInput() {
         // Toggle map only with M
-        if (justPressed(keyboard.isMapPressed() || controller.isMapPressed(), prevMap)) {
+        if (
+            justPressed(
+                keyboard.isMapPressed() || controller.isMapPressed(),
+                prevMap
+            )
+        ) {
             gp.gameState = gp.playState;
         }
     }
@@ -334,7 +364,10 @@ public class KeyHandler extends KeyAdapter {
         boolean left = justPressed(leftPressed, prevLeft);
         boolean right = justPressed(rightPressed, prevRight);
         boolean confirm = interactOnce;
-        boolean escape = justPressed(keyboard.isEscapePressed() || controller.isEscapePressed(), prevEscape);
+        boolean escape = justPressed(
+            keyboard.isEscapePressed() || controller.isEscapePressed(),
+            prevEscape
+        );
 
         // Delegate to UI to update enchant cursor/selection, similar to inventory navigation
         if (up) gp.ui.moveEnchantCursor(-1, 0);

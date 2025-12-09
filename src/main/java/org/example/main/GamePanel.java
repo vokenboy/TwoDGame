@@ -16,6 +16,7 @@ import org.example.entity.Player;
 import org.example.environment.EnvironmentManager;
 import org.example.main.net.MultiplayerServer;
 import org.example.main.net.RemotePlayerInput;
+import org.example.main.net.RemoteRenderServer;
 import org.example.main.sound.RealSound;
 import org.example.main.sound.SoundInterface;
 import org.example.main.sound.SoundProxy;
@@ -116,7 +117,8 @@ public class GamePanel extends JPanel implements Runnable {
     public final int indoor = 51;
     public final int dungeon = 52;
 
-    public GamePanel() { // constructor
+    public GamePanel() {
+        // constructor
         this.setPreferredSize(new Dimension(screenWidth, screenHeight)); // JPanel size
         this.setBackground(Color.black);
         this.setDoubleBuffered(true);
