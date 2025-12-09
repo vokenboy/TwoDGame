@@ -2,6 +2,7 @@ package org.example.tile_interactive;
 
 import org.example.entity.Entity;
 import org.example.main.GamePanel;
+import org.example.visitor.TileVisitor;
 
 import java.awt.*;
 
@@ -55,5 +56,10 @@ public final class IT_DestructibleWall extends InteractiveTile {
     @Override
     public int getParticleMaxLife() {
         return 20;
+    }
+
+    @Override
+    public void accept(TileVisitor visitor) {
+        visitor.visit(this);
     }
 }

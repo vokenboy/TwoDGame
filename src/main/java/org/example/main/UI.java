@@ -103,14 +103,13 @@ public class UI {
 
                 charIndex++;
             }
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.interactOnce)
             {
                 charIndex = 0;
                 combinedText = "";
                 if(gp.gameState == gp.dialogueState || gp.gameState == gp.cutsceneState)
                 {
                     npc.dialogueIndex++;
-                    gp.keyH.enterPressed = false;
                 }
             }
         }

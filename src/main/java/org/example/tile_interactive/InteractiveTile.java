@@ -2,10 +2,12 @@ package org.example.tile_interactive;
 
 import org.example.entity.Entity;
 import org.example.main.GamePanel;
+import org.example.visitor.TileElement;
+import org.example.visitor.TileVisitor;
 
 import java.awt.*;
 
-public abstract class InteractiveTile extends Entity {
+public abstract class InteractiveTile extends Entity implements TileElement {
 
     protected GamePanel gp;
     public boolean destructible = false;
@@ -48,6 +50,9 @@ public abstract class InteractiveTile extends Entity {
     public void playSE() {}
 
     public InteractiveTile getDestroyedForm() { return null; }
+
+    @Override
+    public abstract void accept(TileVisitor visitor);
 
 
     @Override

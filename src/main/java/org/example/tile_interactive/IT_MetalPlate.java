@@ -1,6 +1,7 @@
 package org.example.tile_interactive;
 
 import org.example.main.GamePanel;
+import org.example.visitor.TileVisitor;
 
 public final class IT_MetalPlate extends InteractiveTile {
 
@@ -62,5 +63,10 @@ public final class IT_MetalPlate extends InteractiveTile {
     @Override
     public int getParticleMaxLife() {
         return 0;
+    }
+
+    @Override
+    public void accept(TileVisitor visitor) {
+        visitor.visit(this);
     }
 }

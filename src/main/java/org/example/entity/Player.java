@@ -4,6 +4,10 @@ import org.example.main.GamePanel;
 import org.example.main.KeyHandler;
 import org.example.object.*;
 import org.example.main.PlayerObserver;
+import org.example.tile_interactive.InteractiveTile;
+import org.example.visitor.ChopVisitor;
+import org.example.visitor.SmashVisitor;
+import org.example.visitor.TileVisitor;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -350,7 +354,7 @@ public class Player extends Entity {
             guardCounter++;
         }
         else if(keyH.upPressed == true || keyH.downPressed == true ||
-                keyH.leftPressed == true || keyH.rightPressed == true || keyH.enterPressed == true)
+                keyH.leftPressed == true || keyH.rightPressed == true || keyH.interactPressed == true)
         {
             if(keyH.upPressed == true)
             {
@@ -391,7 +395,7 @@ public class Player extends Entity {
             gp.eHandler.checkEvent();
 
             // IF COLLISION IS FALSE, PLAYER CAN MOVE
-            if(collisionOn == false && keyH.enterPressed == false)   //Without this, player moves when you press ENTER
+            if(collisionOn == false && keyH.interactPressed == false)   //Without this, player moves when you press INTERACT
             {
                 switch (direction)
                 {
@@ -421,7 +425,6 @@ public class Player extends Entity {
             }
 
             attackCanceled = false;
-            gp.keyH.enterPressed = false;
             guarding = false;
             guardCounter = 0;
 
@@ -562,10 +565,10 @@ public class Player extends Entity {
                 gp.obj[gp.currentMap][i].use(this);
                 gp.obj[gp.currentMap][i] = null;
             }
-            //OBSTACLE
+            //OBSTACLE / INTERACTABLE
             else if(gp.obj[gp.currentMap][i].type == type_obstacle)
             {
-                if(keyH.enterPressed == true)
+                if(keyH.interactOnce)
                 {
                     attackCanceled = true;
                     gp.obj[gp.currentMap][i].interact();
@@ -594,7 +597,7 @@ public class Player extends Entity {
     {
         if(i != 999)
         {
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.interactOnce)
             {
                 attackCanceled = true;
                 gp.npc[gp.currentMap][i].speak();
@@ -668,21 +671,39 @@ public class Player extends Entity {
 
     public void damageInteractiveTile(int i)
     {
-        if(i != 999 && gp.iTile[gp.currentMap][i].destructible == true && gp.iTile[gp.currentMap][i].isCorrectItem(this) == true && gp.iTile[gp.currentMap][i].invincible == false)
-        {
-            gp.iTile[gp.currentMap][i].playSE();
-            gp.iTile[gp.currentMap][i].life--;
-            gp.iTile[gp.currentMap][i].invincible = true;
-
-            //Generate Particle
-            generateParticle(gp.iTile[gp.currentMap][i], gp.iTile[gp.currentMap][i]);
-
-            if(gp.iTile[gp.currentMap][i].life == 0)
-            {
-                //gp.iTile[gp.currentMap][i].checkDrop();
-                gp.iTile[gp.currentMap][i] = gp.iTile[gp.currentMap][i].getDestroyedForm();
-            }
+        if (i == 999) {
+            return;
         }
+
+        InteractiveTile tile = gp.iTile[gp.currentMap][i];
+        if (tile == null) {
+            return;
+        }
+
+        TileVisitor visitor = selectTileVisitor();
+        if (visitor == null) {
+            return;
+        }
+
+        tile.accept(visitor);
+
+        if(tile.life <= 0)
+        {
+            gp.iTile[gp.currentMap][i] = tile.getDestroyedForm();
+        }
+    }
+
+    private TileVisitor selectTileVisitor() {
+        if (currentWeapon == null) {
+            return null;
+        }
+        if (currentWeapon.type == type_axe) {
+            return new ChopVisitor(this);
+        }
+        if (currentWeapon.type == type_pickaxe) {
+            return new SmashVisitor(this);
+        }
+        return null;
     }
     public void damageProjectile(int i)
     {
