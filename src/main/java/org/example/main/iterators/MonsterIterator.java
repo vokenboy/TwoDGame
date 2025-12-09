@@ -5,17 +5,15 @@ import org.example.main.GamePanel;
 
 public class MonsterIterator implements EntityIterator {
 
-    private final GamePanel gp;
     private final Entity[][] monsters;
     private final int map;
     private int index = 0;
     private Entity nextMonster;
 
-    public MonsterIterator(GamePanel gp, Entity[][] monsters, int map) {
-        this.gp = gp;
+    public MonsterIterator(Entity[][] monsters, int map) {
         this.monsters = monsters;
         this.map = map;
-        advanceToNextValid();
+        advanceToNextNonNull();
     }
 
     @Override
@@ -26,16 +24,16 @@ public class MonsterIterator implements EntityIterator {
     @Override
     public Entity next() {
         Entity current = nextMonster;
-        advanceToNextValid();
+        advanceToNextNonNull();
         return current;
     }
 
-    private void advanceToNextValid() {
+    private void advanceToNextNonNull() {
         nextMonster = null;
 
         while (index < monsters[map].length) {
             Entity e = monsters[map][index++];
-            if (e != null && e.alive && !e.dying && e.inCamera()) {
+            if (e != null) {
                 nextMonster = e;
                 break;
             }
