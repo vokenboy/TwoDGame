@@ -7,7 +7,7 @@ import net.java.games.input.ControllerEnvironment;
 public class ControllerAdapter implements Controls {
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
-    private boolean pausePressed, characterPressed, mapPressed, escapePressed;
+    private boolean pausePressed, characterPressed, mapPressed, escapePressed, achievementsPressed;
     private boolean enterPressed, interactPressed, shotPressed, altShotPressed, spacePressed;
 
     private Controller controller;
@@ -78,6 +78,7 @@ public class ControllerAdapter implements Controls {
                 case "3" -> pausePressed = value == 1.0f;
                 case "4" -> characterPressed = value == 1.0f;
                 case "5" -> mapPressed = value == 1.0f;
+                case "6" -> achievementsPressed = value == 1.0f;
                 case "7" -> escapePressed = value == 1.0f;
             }
         }
@@ -86,7 +87,7 @@ public class ControllerAdapter implements Controls {
     private void resetInputs() {
         upPressed = downPressed = leftPressed = rightPressed = false;
         enterPressed = interactPressed = shotPressed = spacePressed = false;
-        pausePressed = characterPressed = mapPressed = escapePressed = false;
+        pausePressed = characterPressed = mapPressed = escapePressed = achievementsPressed = false;
     }
 
     @Override
@@ -115,5 +116,7 @@ public class ControllerAdapter implements Controls {
     public boolean isMapPressed() { return mapPressed; }
     @Override
     public boolean isEscapePressed() { return escapePressed; }
+    @Override
+    public boolean isAchievementsPressed() { return achievementsPressed; }
 }
 

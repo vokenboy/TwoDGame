@@ -14,6 +14,7 @@ public interface Controls {
     boolean isCharacterPressed();
     boolean isMapPressed();
     boolean isEscapePressed();
+    boolean isAchievementsPressed();
 
     void update();
 }
