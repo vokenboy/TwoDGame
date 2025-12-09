@@ -1,20 +1,17 @@
 package org.example.monster;
 
-import org.example.entity.Entity;
 import org.example.main.GamePanel;
+import java.util.Random;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
-import org.example.object.OBJ_Rock;
-import org.example.entity.MovementStrategy;
-import java.util.Random;
 
 public class MON_GreenSlime extends MON_Slime {
 
-    GamePanel gp; // cuz of different package
+    GamePanel gp;
+
     public MON_GreenSlime(GamePanel gp) {
         super(gp);
-
         this.gp = gp;
 
         type = type_monster;
@@ -26,8 +23,6 @@ public class MON_GreenSlime extends MON_Slime {
         attack = 2;
         defense = 0;
         exp = 2;
-        //projectile = new OBJ_Rock(gp);
-
 
         solidArea.x = 3;
         solidArea.y = 18;
@@ -36,34 +31,37 @@ public class MON_GreenSlime extends MON_Slime {
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 
-        getImage();
-    }
+        MonsterSpriteSet s = MonsterSpriteFactory.getGreenSlime(gp);
 
-    public void getImage()
-    {
-        up1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        up2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
-        down1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        down2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
-        left1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        left2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
-        right1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        right2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
+        this.up1 = s.up1;
+        this.up2 = s.up2;
+        this.down1 = s.down1;
+        this.down2 = s.down2;
+        this.left1 = s.left1;
+        this.left2 = s.left2;
+        this.right1 = s.right1;
+        this.right2 = s.right2;
     }
 
     @Override
-    public void getAttackImage() {
+    public void getImage() {}
 
-    }
+    @Override
+    public void getAttackImage() {}
 
+    @Override
     public void setAction() {
+
         if (onPath) {
             checkStopChasingOrNot(gp.player, 15, 100);
+
             if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
                 setMovementStrategy(new org.example.entity.PathfindingStrategy());
             }
+
         } else {
             checkStartChasingOrNot(gp.player, 5, 100);
+
             if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
                 setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
             }
@@ -72,33 +70,21 @@ public class MON_GreenSlime extends MON_Slime {
         performMove();
     }
 
+    @Override
     public void damageReaction() {
         actionLockCounter = 0;
-        //direction = gp.player.direction;
-        onPath = true; // gets aggro
-    }
-    public void checkDrop()
-    {
-        //CAST A DIE
-        int i = new Random().nextInt(100)+1;
-
-        //SET THE MONSTER DROP
-        if(i < 50)
-        {
-            dropItem(new OBJ_Coin_Bronze(gp));
-        }
-        if(i >= 50 && i < 75)
-        {
-            dropItem(new OBJ_Heart(gp));
-        }
-        if(i >= 75 && i < 100)
-        {
-            dropItem(new OBJ_ManaCrystal(gp));
-        }
+        onPath = true;
     }
 
     @Override
-    public void setDialogue() {
+    public void checkDrop() {
+        int i = new Random().nextInt(100) + 1;
 
+        if (i < 50) dropItem(new OBJ_Coin_Bronze(gp));
+        else if (i < 75) dropItem(new OBJ_Heart(gp));
+        else dropItem(new OBJ_ManaCrystal(gp));
     }
+
+    @Override
+    public void setDialogue() {}
 }
