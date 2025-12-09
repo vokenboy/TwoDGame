@@ -7,6 +7,7 @@ import org.example.factory.RedMonsterFactory;
 import org.example.entity.NPC_BigRock;
 import org.example.entity.NPC_Merchant;
 import org.example.entity.NPC_OldMan;
+import org.example.entity.NPC_Enchanter;
 import org.example.monster.*;
 import org.example.object.*;
 import org.example.tile_interactive.IT_DestructibleWall;
@@ -113,6 +114,11 @@ public class AssetSetter {
         gp.npc[mapNum][i] = new NPC_OldMan(gp);
         gp.npc[mapNum][i].worldX = gp.tileSize*21;
         gp.npc[mapNum][i].worldY = gp.tileSize*21;
+        i++;
+
+        gp.npc[mapNum][i] = new NPC_Enchanter(gp);
+        gp.npc[mapNum][i].worldX = gp.tileSize*15;  // Place near spawn
+        gp.npc[mapNum][i].worldY = gp.tileSize*20;
         i++;
 
         //MAP = 1

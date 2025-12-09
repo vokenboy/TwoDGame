@@ -81,9 +81,11 @@ public class KeyHandler extends KeyAdapter {
         } else if (gp.gameState == gp.gameOverState) {
             handleGameOverInput();
         } else if (gp.gameState == gp.tradeState) {
-            handleTradeInput();
+            handleTradeInput(escapePressed);
         } else if (gp.gameState == gp.mapState) {
-            handleMapInput();
+            handleMapInput(escapePressed);
+        } else if(gp.gameState == gp.enchantState) {
+            handleEnchantInput(escapePressed);
         }
 
         prevUp = upPressed;
@@ -94,7 +96,6 @@ public class KeyHandler extends KeyAdapter {
         prevInteract = interactPressed;
         prevShot = shotKeyPressed;
         prevAltShot = altShotKeyPressed;
-        prevSpace = spacePressed;
         prevPause = pausePressed;
         prevCharacter = characterPressed;
         prevMap = mapPressed;

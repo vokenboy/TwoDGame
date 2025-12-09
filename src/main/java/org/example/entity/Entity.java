@@ -114,6 +114,26 @@ public class Entity {
     public final int type_light = 9;
     public final int type_pickaxe = 10;
 
+    // Add these new attributes for decorator effects
+    public int lifeStealPercent = 0;
+    public int criticalChance = 0;
+    public boolean criticalHit = false;
+    public int bonusDamagePercent = 0;
+    public int bonusCritDamagePercent = 0;
+    public int damageMitigationPercent = 0;
+    public int elementalResistPercent = 0;
+    public int manaRegenPerTick = 0;
+    public int healthRegenPerTick = 0;
+    public int speedPercent = 0;
+    public int statusEffectChance = 0;
+    public int guardStrength = 0;
+
+    // Enchantment system attributes
+    public Entity originalItem; // Store reference to unwrapped base item
+    public int enchantmentSlots = 3; // Default 3 slots
+    public int usedEnchantmentSlots = 0;
+    public ArrayList<String> appliedEnchantments = new ArrayList<>();
+
     // STRATEGY CODE
     private MovementStrategy movementStrategy;
 
@@ -133,6 +153,11 @@ public class Entity {
     public Entity(GamePanel gp)
     {
         this.gp = gp;
+    }
+
+    public GamePanel getGp()
+    {
+        return gp;
     }
 
     protected Entity deepCopy(Entity source) {
@@ -750,7 +775,7 @@ public class Entity {
                     offBalance = true;
                     spriteCounter -= 60;
                 } else {
-                    damage /= 2;
+                    damage = gp.player.mitigateIncomingDamage(Math.max(1, damage), true);
                     gp.gameFacade.playSoundEffect(15);
                 }
             } else {
@@ -773,7 +798,7 @@ public class Entity {
     }
     public void takeDamage(int damage) {
         if (!invincible && alive) {
-            if (damage < 1) damage = 1;
+            damage = gp.player.mitigateIncomingDamage(Math.max(1, damage), false);
             life -= damage;
             invincible = true;
 
