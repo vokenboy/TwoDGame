@@ -14,4 +14,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <!-- Local JInput gamepad support (jar is checked into /lib) -->
+        <dependency>
+            <groupId>net.java.jinput</groupId>
+            <artifactId>jinput</artifactId>
+            <version>2.0.10</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/jinput-2.0.10.jar</systemPath>
+        </dependency>
+    </dependencies>
+
 </project>
