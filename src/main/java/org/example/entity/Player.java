@@ -2,6 +2,7 @@ package org.example.entity;
 
 import org.example.main.GamePanel;
 import org.example.main.KeyHandler;
+import org.example.main.state.GameOverState;
 import org.example.object.*;
 import org.example.main.PlayerObserver;
 
@@ -521,7 +522,7 @@ public class Player extends Entity {
         {
             if(life <= 0)
             {
-                gp.gameState = gp.gameOverState;
+                gp.setState(new GameOverState(), gp.gameOverState);
                 gp.ui.commandNum =- 1; //for if you die while pressing enter
                 gp.gameFacade.stopBackgroundMusic();
                 gp.gameFacade.playSoundEffect(12);
