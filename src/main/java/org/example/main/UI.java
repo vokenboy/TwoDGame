@@ -710,7 +710,7 @@ public class UI {
         if(commandNum == 0)
         {
             g2.drawString(">", x - 24, y);
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.interactOnce)
             {
                 subState = 1;
             }
@@ -720,7 +720,7 @@ public class UI {
         if(commandNum == 1)
         {
             g2.drawString(">", x - 24, y);
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.interactOnce)
             {
                 commandNum = 0;
                 npc.startDialogue(npc, 1);
@@ -737,7 +737,7 @@ public class UI {
         int height = gp.tileSize * 2;
         drawSubWindow(x, y, width, height);
         g2.drawString("[ESC] Back", x + 24, y + 50);
-        g2.drawString("Press [ENTER] to infuse a random enchant.", x + 24, y + 80);
+        g2.drawString("Press [E] to infuse a random enchant.", x + 24, y + 80);
 
         if(lastEnchantmentResult != null)
         {
@@ -768,7 +768,7 @@ public class UI {
         }
 
         int itemIndex = getItemIndexOnSlot(playerSlotCol, playerSlotRow);
-        if(itemIndex < gp.player.inventory.size() && gp.keyH.enterPressed)
+        if(itemIndex < gp.player.inventory.size() && gp.keyH.interactOnce)
         {
             Entity selectedItem = gp.player.inventory.get(itemIndex);
             if(isEnchantable(selectedItem))
@@ -780,7 +780,47 @@ public class UI {
                 subState = 0;
                 npc.startDialogue(npc, 3);
             }
-            gp.keyH.enterPressed = false;
+        }
+    }
+
+    // Navigation helpers for enchant menu (triggered by KeyHandler)
+    public void moveEnchantCursor(int dRow, int dCol) {
+        if (subState == 0) {
+            if (dRow < 0) {
+                commandNum = Math.max(0, commandNum - 1);
+            } else if (dRow > 0) {
+                commandNum = Math.min(1, commandNum + 1);
+            }
+        } else if (subState == 1) {
+            int maxCol = 4;
+            int maxRow = 3;
+            playerSlotCol = Math.max(0, Math.min(maxCol, playerSlotCol + dCol));
+            playerSlotRow = Math.max(0, Math.min(maxRow, playerSlotRow + dRow));
+        }
+    }
+
+    public void confirmEnchantSelection() {
+        if (subState == 0) {
+            if (commandNum == 0) {
+                subState = 1;
+            } else if (commandNum == 1) {
+                commandNum = 0;
+                npc.startDialogue(npc, 1);
+            }
+            return;
+        }
+
+        if (subState == 1) {
+            int itemIndex = getItemIndexOnSlot(playerSlotCol, playerSlotRow);
+            if (itemIndex < gp.player.inventory.size()) {
+                Entity selectedItem = gp.player.inventory.get(itemIndex);
+                if (isEnchantable(selectedItem)) {
+                    performRandomEnchant(itemIndex, selectedItem);
+                } else {
+                    subState = 0;
+                    npc.startDialogue(npc, 3);
+                }
+            }
         }
     }
 

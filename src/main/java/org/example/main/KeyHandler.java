@@ -81,11 +81,11 @@ public class KeyHandler extends KeyAdapter {
         } else if (gp.gameState == gp.gameOverState) {
             handleGameOverInput();
         } else if (gp.gameState == gp.tradeState) {
-            handleTradeInput(escapePressed);
+            handleTradeInput();
         } else if (gp.gameState == gp.mapState) {
-            handleMapInput(escapePressed);
+            handleMapInput();
         } else if(gp.gameState == gp.enchantState) {
-            handleEnchantInput(escapePressed);
+            handleEnchantInput();
         }
 
         prevUp = upPressed;
@@ -313,14 +313,36 @@ public class KeyHandler extends KeyAdapter {
     }
 
     private void handleTradeInput() {
-        if (enterOnce) {
+        // Close trade with interact or escape
+        boolean escape = justPressed(keyboard.isEscapePressed() || controller.isEscapePressed(), prevEscape);
+        if (interactOnce || escape) {
             gp.gameState = gp.playState;
         }
     }
 
     private void handleMapInput() {
+        // Toggle map only with M
         if (justPressed(keyboard.isMapPressed() || controller.isMapPressed(), prevMap)) {
             gp.gameState = gp.playState;
         }
+    }
+
+    private void handleEnchantInput() {
+        // Reuse inventory-like navigation: arrows to move, E to confirm, Esc to back
+        boolean up = justPressed(upPressed, prevUp);
+        boolean down = justPressed(downPressed, prevDown);
+        boolean left = justPressed(leftPressed, prevLeft);
+        boolean right = justPressed(rightPressed, prevRight);
+        boolean confirm = interactOnce;
+        boolean escape = justPressed(keyboard.isEscapePressed() || controller.isEscapePressed(), prevEscape);
+
+        // Delegate to UI to update enchant cursor/selection, similar to inventory navigation
+        if (up) gp.ui.moveEnchantCursor(-1, 0);
+        if (down) gp.ui.moveEnchantCursor(1, 0);
+        if (left) gp.ui.moveEnchantCursor(0, -1);
+        if (right) gp.ui.moveEnchantCursor(0, 1);
+
+        if (confirm) gp.ui.confirmEnchantSelection();
+        if (escape) gp.gameState = gp.playState;
     }
 }
