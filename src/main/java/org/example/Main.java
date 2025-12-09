@@ -9,6 +9,11 @@ public class Main {
     public static JFrame window;
 
     public static void main(String[] args) {
+        // Disable D3D pipeline to avoid NullSurfaceData/D3DSurfaceData issues with multiple windows
+        System.setProperty("sun.java2d.d3d", "false");
+        System.setProperty("sun.java2d.noddraw", "true");
+        System.setProperty("sun.java2d.renderer", "sun.java2d.pisces.PiscesRenderingEngine");
+
         window = new JFrame();
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setResizable(false); // Cant Resizable

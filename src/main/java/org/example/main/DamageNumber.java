@@ -26,8 +26,9 @@ public class DamageNumber {
     }
 
     public void draw(Graphics2D g2, GamePanel gp) {
-        int screenX = worldX - gp.player.worldX + gp.player.screenX;
-        int screenY = worldY - gp.player.worldY + gp.player.screenY;
+        var cam = gp.getActiveCamera();
+        int screenX = worldX - cam.worldX + cam.screenX;
+        int screenY = worldY - cam.worldY + cam.screenY;
 
         float alpha = 1.0f - ((float)counter / maxLife);
 

@@ -62,10 +62,11 @@ public class Map extends TileManager{
 
         //Draw Player
         double scale = (double) (gp.tileSize * gp.maxWorldCol)/width; //Scaling from actual map
-        int playerX = (int)(x + gp.player.worldX/scale);
-        int playerY = (int)(y + gp.player.worldY/scale);
+        org.example.entity.Player cam = gp.getActiveCamera();
+        int playerX = (int)(x + cam.worldX/scale);
+        int playerY = (int)(y + cam.worldY/scale);
         int playerSize = (int)(gp.tileSize/scale);
-        g2.drawImage(gp.player.down1,playerX,playerY,playerSize,playerSize,null);
+        g2.drawImage(cam.down1,playerX,playerY,playerSize,playerSize,null);
 
         //Hint
         g2.setFont(gp.ui.maruMonica.deriveFont(32f));
@@ -87,10 +88,11 @@ public class Map extends TileManager{
 
             //Draw Player
             double scale = (double) (gp.tileSize * gp.maxWorldCol)/width; //Scaling from actual map
-            int playerX = (int)(x + gp.player.worldX/scale);
-            int playerY = (int)(y + gp.player.worldY/scale);
+            org.example.entity.Player cam = gp.getActiveCamera();
+            int playerX = (int)(x + cam.worldX/scale);
+            int playerY = (int)(y + cam.worldY/scale);
             int playerSize = (int)(gp.tileSize/3); //(int)(gp.tileSize/scale);
-            g2.drawImage(gp.player.down1,playerX-6,playerY-6,playerSize,playerSize,null); //playerX,playerY
+            g2.drawImage(cam.down1,playerX-6,playerY-6,playerSize,playerSize,null); //playerX,playerY
 
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f)); //reset alpha
         }

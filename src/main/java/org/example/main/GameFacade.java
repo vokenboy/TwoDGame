@@ -163,7 +163,7 @@ public class GameFacade {
 
 
     public boolean monsterContactedPlayer(Entity monster) {
-        return cChecker.checkPlayer(monster);
+        return cChecker.checkPlayer(monster) != null;
     }
 
 

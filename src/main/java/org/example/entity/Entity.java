@@ -167,13 +167,13 @@ public class Entity {
     }
     public int getScreenX()
     {
-        int screenX = worldX - gp.player.worldX + gp.player.screenX;
-        return screenX;
+        Player camera = gp.getActiveCamera();
+        return worldX - camera.worldX + camera.screenX;
     }
     public int getScreenY()
     {
-        int screenY = worldY - gp.player.worldY + gp.player.screenY;
-        return screenY;
+        Player camera = gp.getActiveCamera();
+        return worldY - camera.worldY + camera.screenY;
     }
     public int getLeftX()
     {
@@ -273,7 +273,8 @@ public class Entity {
     }
     public void facePlayer()
     {
-        switch (gp.player.direction)
+        Player target = gp.getNearestPlayer(this);
+        switch (target.direction)
         {
             case "up":
                 direction = "down";
@@ -371,10 +372,10 @@ public class Entity {
         gp.cChecker.checkEntity(this, gp.npc);
         gp.cChecker.checkEntity(this, gp.monster);
         gp.cChecker.checkEntity(this,gp.iTile);
-        boolean contactPlayer = gp.cChecker.checkPlayer(this);
-        if(this.type == type_monster && contactPlayer == true)
+        Player contactPlayer = gp.cChecker.checkPlayer(this);
+        if(this.type == type_monster && contactPlayer != null)
         {
-            damagePlayer(attack);
+            damagePlayer(contactPlayer, attack);
         }
     }
     public void update()
@@ -488,31 +489,32 @@ public class Entity {
     public void checkAttackOrNot(int rate, int straight, int horizontal)
     {
         boolean tartgetInRange = false;
-        int xDis = getXdistance(gp.player);
-        int yDis = getYdistance(gp.player);
+        Player target = gp.getNearestPlayer(this);
+        int xDis = getXdistance(target);
+        int yDis = getYdistance(target);
 
         switch (direction)
         {
             case "up":
-                if(gp.player.getCenterY() < getCenterY()  && yDis < straight && xDis < horizontal)
+                if(target.getCenterY() < getCenterY()  && yDis < straight && xDis < horizontal)
                 {
                     tartgetInRange = true;
                 }
                 break;
             case "down":
-                if(gp.player.getCenterY()  > getCenterY()  && yDis < straight && xDis < horizontal)
+                if(target.getCenterY()  > getCenterY()  && yDis < straight && xDis < horizontal)
                 {
                     tartgetInRange = true;
                 }
                 break;
             case "left":
-                if(gp.player.getCenterX()  < getCenterX() && xDis < straight && yDis < horizontal)
+                if(target.getCenterX()  < getCenterX() && xDis < straight && yDis < horizontal)
                 {
                     tartgetInRange = true;
                 }
                 break;
             case "right":
-                if(gp.player.getCenterX() > getCenterX() && xDis < straight && yDis < horizontal)
+                if(target.getCenterX() > getCenterX() && xDis < straight && yDis < horizontal)
                 {
                     tartgetInRange = true;
                 }
@@ -657,9 +659,10 @@ public class Entity {
 
         if(actionLockCounter > interval)
         {
-            if(getXdistance(gp.player) > getYdistance(gp.player)) //if entity far to the player on X axis moves right or left
+            Player target = gp.getNearestPlayer(this);
+            if(getXdistance(target) > getYdistance(target)) //if entity far to the player on X axis moves right or left
             {
-                if(gp.player.getCenterX() < getCenterX()) //Player is left side, entity moves to left
+                if(target.getCenterX() < getCenterX()) //Player is left side, entity moves to left
                 {
                     direction = "left";
                 }
@@ -668,9 +671,9 @@ public class Entity {
                     direction = "right";
                 }
             }
-            else if(getXdistance(gp.player) < getYdistance(gp.player))  //if entity far to the player on Y axis moves up or down
+            else if(getXdistance(target) < getYdistance(target))  //if entity far to the player on Y axis moves up or down
             {
-                if(gp.player.getCenterY() < getCenterY()) //Player is up side, entity moves to up
+                if(target.getCenterY() < getCenterY()) //Player is up side, entity moves to up
                 {
                     direction = "up";
                 }
@@ -729,23 +732,24 @@ public class Entity {
 
             if(type == type_monster)
             {
-                if(gp.cChecker.checkPlayer(this) == true) //This means attack is hitting player
+                Player target = gp.cChecker.checkPlayer(this); //This means attack is hitting player
+                if(target != null)
                 {
-                    damagePlayer(attack);
+                    damagePlayer(target, attack);
                 }
             }
             else // Player
             {
+                Player attacker = (Player) this;
                 //Check monster collision with the updated worldX, worldY and solidArea
                 int monsterIndex = gp.cChecker.checkEntity(this,gp.monster);
-                gp.player.damageMonster(monsterIndex, this, attack, currentWeapon.knockBackPower);
-
+                attacker.damageMonster(monsterIndex, this, attack, currentWeapon.knockBackPower);
 
                 int iTileIndex = gp.cChecker.checkEntity(this, gp.iTile);
-                gp.player.damageInteractiveTile(iTileIndex);
+                attacker.damageInteractiveTile(iTileIndex);
 
                 int projectileIndex = gp.cChecker.checkEntity(this, gp.projectile);
-                gp.player.damageProjectile(projectileIndex);
+                attacker.damageProjectile(projectileIndex);
 
             }
 
@@ -762,20 +766,20 @@ public class Entity {
             attacking = false;
         }
     }
-    public void damagePlayer(int attack) {
-        if (!gp.player.invincible) {
-            int damage = attack - gp.player.defense;
+    public void damagePlayer(Player target, int attack) {
+        if (!target.invincible) {
+            int damage = attack - target.defense;
             String canGuardDirection = getOppositeDirection(direction);
 
-            if (gp.player.guarding && gp.player.direction.equals(canGuardDirection)) {
-                if (gp.player.guardCounter < 10) {
+            if (target.guarding && target.direction.equals(canGuardDirection)) {
+                if (target.guardCounter < 10) {
                     damage = 0;
                     gp.gameFacade.playSoundEffect(16);
-                    setKnockBack(this, gp.player, knockBackPower);
+                    setKnockBack(this, target, knockBackPower);
                     offBalance = true;
                     spriteCounter -= 60;
                 } else {
-                    damage = gp.player.mitigateIncomingDamage(Math.max(1, damage), true);
+                    damage = target.mitigateIncomingDamage(Math.max(1, damage), true);
                     gp.gameFacade.playSoundEffect(15);
                 }
             } else {
@@ -784,22 +788,21 @@ public class Entity {
             }
 
             if (damage != 0) {
-                gp.player.transparent = true;
-                setKnockBack(gp.player, this, knockBackPower);
+                target.transparent = true;
+                setKnockBack(target, this, knockBackPower);
             }
 
-            gp.player.life -= damage;
-            gp.player.invincible = true;
+            target.life -= damage;
+            target.invincible = true;
 
             gp.damageNumbers.add(
-                    new DamageNumber(damage, gp.player.worldX, gp.player.worldY - gp.tileSize / 2)
+                    new DamageNumber(damage, target.worldX, target.worldY - gp.tileSize / 2)
             );
         }
     }
     public void takeDamage(int damage) {
         if (!invincible && alive) {
-            damage = gp.player.mitigateIncomingDamage(Math.max(1, damage), false);
-            life -= damage;
+            life -= Math.max(1, damage);
             invincible = true;
 
             gp.damageNumbers.add(
@@ -821,15 +824,14 @@ public class Entity {
     }
     public boolean inCamera()
     {
-        boolean inCamera = false;
-        if(     worldX + gp.tileSize*5 > gp.player.worldX - gp.player.screenX && //*5 because skeleton lord disappears when the top left corner isn't on the screen
-                worldX - gp.tileSize < gp.player.worldX + gp.player.screenX &&
-                worldY + gp.tileSize*5 > gp.player.worldY - gp.player.screenY &&
-                worldY - gp.tileSize < gp.player.worldY + gp.player.screenY)
-        {
-            inCamera = true;
+        var cam = gp.getActiveCamera();
+        if (cam == null) {
+            cam = gp.player;
         }
-        return inCamera;
+        return worldX + gp.tileSize * 5 > cam.worldX - cam.screenX && //*5 because skeleton lord disappears when the top left corner isn't on the screen
+               worldX - gp.tileSize < cam.worldX + cam.screenX &&
+               worldY + gp.tileSize * 5 > cam.worldY - cam.screenY &&
+               worldY - gp.tileSize < cam.worldY + cam.screenY;
     }
     public void draw(Graphics2D g2)
     {
@@ -912,6 +914,25 @@ public class Entity {
                 dyingAnimation(g2);
             }
 
+            // Draw HP bar for monsters when recently damaged
+            if(type == type_monster && hpBarOn) {
+                double oneScale = (double) gp.tileSize / maxLife;
+                double hpBarValue = oneScale * life;
+                int barWidth = (int) Math.max(1, hpBarValue);
+                int barHeight = 8;
+                int barX = tempScreenX + (gp.tileSize - barWidth) / 2;
+                int barY = tempScreenY - 12;
+                g2.setColor(new Color(35, 35, 35));
+                g2.fillRect(barX - 2, barY - 2, gp.tileSize + 4, barHeight + 4);
+                g2.setColor(new Color(255, 0, 30));
+                g2.fillRect(barX, barY, barWidth, barHeight);
+                hpBarCounter++;
+                if(hpBarCounter > 600) {
+                    hpBarCounter = 0;
+                    hpBarOn = false;
+                }
+            }
+
             g2.drawImage(image, tempScreenX, tempScreenY, null);
 
             //Reset graphics opacity / alpha
@@ -969,10 +990,10 @@ public class Entity {
 
         switch (user.direction)
         {
-            case "up" : nextWorldY = user.getTopY() - gp.player.speed; break;
-            case "down": nextWorldY = user.getBottomY() + gp.player.speed; break;
-            case "left": nextWorldX = user.getLeftX() - gp.player.speed; break;
-            case "right": nextWorldX = user.getRightX() + gp.player.speed; break;
+            case "up" : nextWorldY = user.getTopY() - user.speed; break;
+            case "down": nextWorldY = user.getBottomY() + user.speed; break;
+            case "left": nextWorldX = user.getLeftX() - user.speed; break;
+            case "right": nextWorldX = user.getRightX() + user.speed; break;
         }
         int col = nextWorldX/gp.tileSize;
         int row = nextWorldY/gp.tileSize;

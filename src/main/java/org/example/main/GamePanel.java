@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.concurrent.CopyOnWriteArrayList;
+import org.example.main.net.MultiplayerServer;
+import org.example.main.net.RemotePlayerInput;
 
 public class GamePanel extends JPanel implements Runnable {
     //SCREEN SETTINGS
@@ -44,7 +47,6 @@ public class GamePanel extends JPanel implements Runnable {
     int screenWidth2 = screenWidth;
     int screenHeight2 = screenHeight;
     BufferedImage tempScreen;
-    Graphics2D g2;
     public boolean fullScreenOn = false;
 
 
@@ -55,6 +57,7 @@ public class GamePanel extends JPanel implements Runnable {
     public EntityManager entityManager = new EntityManager(this);
     public TileManager tileM = new TileManager(this);
     public KeyHandler keyH = new KeyHandler(this);
+    public PlayerInput playerOneInput = new KeyHandlerPlayerInput(keyH);
     public EventHandler eHandler = new EventHandler(this);
     public SoundInterface music;
     public SoundInterface se;
@@ -72,7 +75,9 @@ public class GamePanel extends JPanel implements Runnable {
     Thread gameThread;
 
     //ENTITY AND OBJECT
-    public Player player = new Player(this,keyH);
+    public Player player;
+    public List<Player> players = new CopyOnWriteArrayList<>();
+    private MultiplayerServer multiplayerServer;
     public Entity obj[][] = new Entity[maxMap][20]; // display 10 objects same time
     public Entity npc[][] = new Entity[maxMap][10];
     public Entity monster[][] = new Entity[maxMap][20];
@@ -102,6 +107,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     //OTHERS
     public boolean bossBattleOn = false;
+    private final ThreadLocal<Player> renderCamera = ThreadLocal.withInitial(() -> null); // camera per render thread
 
     //AREA
     public int currentArea;
@@ -128,6 +134,13 @@ public class GamePanel extends JPanel implements Runnable {
         this.se = new SoundProxy(realSE, this);
 
         this.gameFacade = new GameFacade(this, music, se);
+
+        this.player = new Player(this, playerOneInput);
+        this.players.add(player);
+
+        // Start network server to accept remote controllers.
+        this.multiplayerServer = new MultiplayerServer(this, 7777);
+        this.multiplayerServer.start();
     }
 
     public void setupGame()
@@ -141,11 +154,14 @@ public class GamePanel extends JPanel implements Runnable {
         gameState = titleState;
         //FOR FULLSCREEN
         tempScreen = new BufferedImage(screenWidth,screenHeight,BufferedImage.TYPE_INT_ARGB); //blank screen
-        g2 = (Graphics2D) tempScreen.getGraphics(); // g2 attached to this tempScreen. g2 will draw on this tempScreen buffered image.
         if(fullScreenOn == true)
         {
             setFullScreen();
         }
+    }
+
+    public BufferedImage getFrame() {
+        return tempScreen;
     }
 
     public void resetGame(boolean restart)
@@ -157,6 +173,8 @@ public class GamePanel extends JPanel implements Runnable {
         bossBattleOn = false;
         player.setDefaultPositions();
         player.restoreStatus();
+        // Remove or reset remote players on reset
+        players.removeIf(p -> p != player);
         aSetter.setMonster();
         aSetter.setNPC();
         player.resetCounter();
@@ -219,7 +237,9 @@ public class GamePanel extends JPanel implements Runnable {
         if(gameState == playState)
         {
             //PLAYER
-            player.update();
+            for (Player p : players) {
+                p.update();
+            }
 
             //NPC
             var itNPC = entityManager.getNPCIterator();
@@ -309,6 +329,23 @@ public class GamePanel extends JPanel implements Runnable {
     //FOR FULL SCREEN (FIRST DRAW TO TEMP SCREEN INSTEAD OF JPANEL)
     public void drawToTempScreen()
     {
+        Graphics2D g = tempScreen.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        drawSceneForPlayer(g, player);
+        g.dispose();
+    }
+
+    /**
+     * Renders the full scene using the given player as the camera origin.
+     */
+    public void drawSceneForPlayer(Graphics2D graphics, Player cameraPlayer)
+    {
+        renderCamera.set(cameraPlayer);
+        // Use safe rendering hints to avoid platform-specific pipeline issues.
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        ArrayList<Entity> renderList = new ArrayList<>();
         //DEBUG
         long drawStart = 0;
         if(keyH.showDebugText == true)
@@ -321,49 +358,48 @@ public class GamePanel extends JPanel implements Runnable {
         {
             gameFacade.stopBackgroundMusic();
             gameFacade.resetAudioState();
-            ui.draw(g2);
+            ui.draw(graphics);
         }
         //MAP SCREEN
         else if(gameState == mapState)
         {
-            map.drawFullMapScreen(g2);
+            map.drawFullMapScreen(graphics);
         }
         //OTHERS
         else
         {
             //TILE
-            tileM.draw(g2);
+            tileM.draw(graphics);
 
             //INTERACTIVE TILE
             for(int i = 0; i < iTile[1].length; i++)
             {
                 if(iTile[currentMap][i] != null)
                 {
-                    iTile[currentMap][i].draw(g2);
+                    iTile[currentMap][i].draw(graphics);
                 }
             }
 
             //ADD ENTITIES TO THE LIST
-            //PLAYER
-            entityList.add(player);
+            renderList.addAll(players);
 
             //NPCs
             var itNPC = entityManager.getNPCIterator();
             while (itNPC.hasNext()) {
-                entityList.add(itNPC.next());
+                renderList.add(itNPC.next());
             }
 
 
             //OBJECTS
             var itObj = entityManager.getObjectIterator();
             while (itObj.hasNext()) {
-                entityList.add(itObj.next());
+                renderList.add(itObj.next());
             }
 
             //MONSTERS
             var itMon = entityManager.getMonsterIterator();
             while (itMon.hasNext()) {
-                entityList.add(itMon.next());
+                renderList.add(itMon.next());
             }
 
             //PROJECTILES
@@ -371,13 +407,13 @@ public class GamePanel extends JPanel implements Runnable {
             {
                 if(projectile[currentMap][i] != null)
                 {
-                    entityList.add(projectile[currentMap][i]);
+                    renderList.add(projectile[currentMap][i]);
                 }
             }
 
             // DAMAGE NUMBERS
             for (DamageNumber dn : damageNumbers) {
-                dn.draw(g2, this);
+                dn.draw(graphics, this);
             }
 
             //PARTICLES
@@ -385,12 +421,12 @@ public class GamePanel extends JPanel implements Runnable {
             {
                 if(particleList.get(i) != null)
                 {
-                    entityList.add(particleList.get(i));
+                    renderList.add(particleList.get(i));
                 }
             }
 
             //SORT
-            Collections.sort(entityList, new Comparator<Entity>() {
+            Collections.sort(renderList, new Comparator<Entity>() {
                 @Override
                 public int compare(Entity e1, Entity e2) {
                     int result = Integer.compare(e1.worldY, e2.worldY);
@@ -399,25 +435,27 @@ public class GamePanel extends JPanel implements Runnable {
             });
 
             //DRAW ENTITIES
-            for(int i = 0; i < entityList.size(); i++)
+            for(int i = 0; i < renderList.size(); i++)
             {
-                entityList.get(i).draw(g2);
+                renderList.get(i).draw(graphics);
             }
 
             //EMPTY ENTITY LIST
-            entityList.clear();
+            renderList.clear();
 
             //ENVIRONMENT
-            eManager.draw(g2);
+            eManager.draw(graphics);
 
             //MINI MAP
-            map.drawMiniMap(g2);
+            map.drawMiniMap(graphics);
 
             //CUTSCENE
-            csManager.draw(g2);
+            csManager.draw(graphics);
 
-            //UI
-            ui.draw(g2);
+            //UI on primary, and always show for game over so all windows reflect death
+            if (cameraPlayer == player || gameState == gameOverState) {
+                ui.draw(graphics);
+            }
 
             //DEBUG
             if(keyH.showDebugText == true)
@@ -425,33 +463,53 @@ public class GamePanel extends JPanel implements Runnable {
                 long drawEnd = System.nanoTime();
                 long passed = drawEnd - drawStart;
 
-                g2.setFont(new Font("Arial", Font.PLAIN,20));
-                g2.setColor(Color.white);
+                graphics.setFont(new Font("Arial", Font.PLAIN,20));
+                graphics.setColor(Color.white);
                 int x = 10;
                 int y = 400;
                 int lineHeight = 20;
 
-                g2.drawString("WorldX " + player.worldX,x,y);
+                graphics.drawString("WorldX " + cameraPlayer.worldX,x,y);
                 y+= lineHeight;
-                g2.drawString("WorldY " + player.worldY,x,y);
+                graphics.drawString("WorldY " + cameraPlayer.worldY,x,y);
                 y+= lineHeight;
-                g2.drawString("Col " + (player.worldX + player.solidArea.x) / tileSize,x,y);
+                graphics.drawString("Col " + (cameraPlayer.worldX + cameraPlayer.solidArea.x) / tileSize,x,y);
                 y+= lineHeight;
-                g2.drawString("Row " + (player.worldY + player.solidArea.y) / tileSize,x,y);
+                graphics.drawString("Row " + (cameraPlayer.worldY + cameraPlayer.solidArea.y) / tileSize,x,y);
                 y+= lineHeight;
-                g2.drawString("Map " + currentMap,x,y);
+                graphics.drawString("Map " + currentMap,x,y);
                 y+= lineHeight;
-                g2.drawString("Draw time: " + passed,x,y);
+                graphics.drawString("Draw time: " + passed,x,y);
                 y+= lineHeight;
-                g2.drawString("God Mode: " + keyH.godModeOn, x, y);
+                graphics.drawString("God Mode: " + keyH.godModeOn, x, y);
             }
         }
+        renderCamera.remove();
     }
 
     public Config getConfig() {
         return config;
     }
 
+    public Player getActiveCamera() {
+        Player cam = renderCamera.get();
+        return cam != null ? cam : player;
+    }
+
+    public Player getNearestPlayer(Entity source) {
+        Player closest = player;
+        int bestDist = Integer.MAX_VALUE;
+        for (Player p : players) {
+            int dx = Math.abs(source.worldX - p.worldX);
+            int dy = Math.abs(source.worldY - p.worldY);
+            int dist = dx + dy;
+            if (dist < bestDist) {
+                bestDist = dist;
+                closest = p;
+            }
+        }
+        return closest;
+    }
     public void drawToScreen()
     {
         Graphics g = getGraphics();
@@ -591,6 +649,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }*/
 
+    public List<Player> getPlayers() {
+        return players;
+    }
+
     public void changeArea()
     {
         if(nextArea != currentArea)
@@ -628,5 +690,26 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
         }
+    }
+
+    public Player addLocalPlayer(PlayerInput input) {
+        Player p = new Player(this, input);
+        p.worldX = player.worldX + tileSize;
+        p.worldY = player.worldY;
+        players.add(p);
+        return p;
+    }
+
+    public void removeLocalPlayer(Player p) {
+        if (p == null || p == player) return;
+        players.remove(p);
+    }
+
+    public Player addNetworkPlayer(RemotePlayerInput input) {
+        return addLocalPlayer(input);
+    }
+
+    public void removeNetworkPlayer(Player p) {
+        removeLocalPlayer(p);
     }
 }

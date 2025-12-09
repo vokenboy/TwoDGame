@@ -1,7 +1,7 @@
 package org.example.entity;
 
 import org.example.main.GamePanel;
-import org.example.main.KeyHandler;
+import org.example.main.PlayerInput;
 import org.example.object.*;
 import org.example.main.PlayerObserver;
 import org.example.tile_interactive.InteractiveTile;
@@ -18,7 +18,7 @@ import java.util.Random;
 
 public class Player extends Entity {
 
-    KeyHandler keyH;
+    PlayerInput input;
     public final int screenX;
     public final int screenY;
     int standCounter = 0;
@@ -29,10 +29,10 @@ public class Player extends Entity {
     private final Random combatRandom = new Random();
 
 
-    public Player(GamePanel gp, KeyHandler keyH)
+    public Player(GamePanel gp, PlayerInput input)
     {
         super(gp); // calling constructor of super class(from entity class)
-        this.keyH=keyH;
+        this.input = input;
 
         screenX = gp.screenWidth/2 - (gp.tileSize/2);
         screenY = gp.screenHeight/2- (gp.tileSize/2);
@@ -318,6 +318,10 @@ public class Player extends Entity {
 
     public void update()
     {
+        input.update();
+        // Always clear attack cancel each frame so secondary players aren't stuck after one swing
+        attackCanceled = false;
+
         if(knockBack == true)
         {
 
@@ -367,27 +371,27 @@ public class Player extends Entity {
         {
             attacking();
         }
-        else if(keyH.spacePressed == true)
+        else if(input.isGuardPressed())
         {
             guarding = true;
             guardCounter++;
         }
-        else if(keyH.upPressed == true || keyH.downPressed == true ||
-                keyH.leftPressed == true || keyH.rightPressed == true || keyH.interactPressed == true)
+        else if(input.isUpPressed() || input.isDownPressed() ||
+                input.isLeftPressed() || input.isRightPressed() || input.isInteractPressed())
         {
-            if(keyH.upPressed == true)
+            if(input.isUpPressed())
             {
                 direction = "up";
             }
-            else if(keyH.downPressed == true)
+            else if(input.isDownPressed())
             {                                                                 // You can go up and down while you pressing left or right.
                 direction = "down";                                           // But if you going up or down you cannot press left or right
             }                                                                 // The reason is here the if statements order.
-            else if(keyH.leftPressed == true)                                 // For example when "keyH.upPressed == true", the else if blocks are not working. And you cannot go anyway when you press up.
+            else if(input.isLeftPressed())                                 // For example when "keyH.upPressed == true", the else if blocks are not working. And you cannot go anyway when you press up.
             {
                 direction = "left";
             }
-            else if(keyH.rightPressed == true)
+            else if(input.isRightPressed())
             {
                 direction = "right";
             }
@@ -414,7 +418,7 @@ public class Player extends Entity {
             gp.eHandler.checkEvent();
 
             // IF COLLISION IS FALSE, PLAYER CAN MOVE
-            if(collisionOn == false && keyH.interactPressed == false)   //Without this, player moves when you press INTERACT
+            if(collisionOn == false && !input.isInteractPressed())   //Without this, player moves when you press INTERACT
             {
                 switch (direction)
                 {
@@ -436,7 +440,7 @@ public class Player extends Entity {
                 }
             }
 
-            if(keyH.enterPressed == true && attackCanceled == false)
+            if(input.isAttackPressed() && attackCanceled == false)
             {
                 gp.gameFacade.playSoundEffect(7);
                 attacking = true;
@@ -472,7 +476,7 @@ public class Player extends Entity {
         }
 
         //PROJECTILE SHOOTING
-        if(gp.keyH.shotKeyPressed && shotAvailableCounter == 30 && projectile.haveResource(this)) {
+        if(input.isShotPressed() && shotAvailableCounter == 30 && projectile.haveResource(this)) {
             Projectile newProjectile = projectile.clone(); // clone prototype
             newProjectile.set(worldX, worldY, direction, true, this);
             newProjectile.subtractResource(this);
@@ -493,7 +497,7 @@ public class Player extends Entity {
             notifyManaChange();
         }
 
-        if(gp.keyH.altShotKeyPressed && shotAvailableCounter == 30 && projectile.haveResource(this)) {
+        if(input.isAltShotPressed() && shotAvailableCounter == 30 && projectile.haveResource(this)) {
             Projectile bigProjectile = projectile.clone();
 
             bigProjectile.solidArea.width = 100;
@@ -539,7 +543,7 @@ public class Player extends Entity {
         {
             mana = maxMana;
         }
-        if(keyH.godModeOn == false)
+        if(!input.isGodModeOn())
         {
             if(life <= 0)
             {
@@ -587,7 +591,7 @@ public class Player extends Entity {
             //OBSTACLE / INTERACTABLE
             else if(gp.obj[gp.currentMap][i].type == type_obstacle)
             {
-                if(keyH.interactOnce)
+                if(input.isInteractOnce())
                 {
                     attackCanceled = true;
                     gp.obj[gp.currentMap][i].interact();
@@ -616,7 +620,7 @@ public class Player extends Entity {
     {
         if(i != 999)
         {
-            if(gp.keyH.interactOnce)
+            if(input.isInteractOnce())
             {
                 attackCanceled = true;
                 gp.npc[gp.currentMap][i].speak();
@@ -958,9 +962,12 @@ public class Player extends Entity {
     public void draw(Graphics2D g2)
     {
         BufferedImage image = null;
-        int tempScreenX = screenX;
-        int tempScreenY = screenY;
-
+        Player cam = gp.getActiveCamera();
+        if (cam == null) {
+            cam = gp.player;
+        }
+        int tempScreenX = worldX - cam.worldX + cam.screenX;
+        int tempScreenY = worldY - cam.worldY + cam.screenY;
 
         switch (direction)
         {
@@ -972,7 +979,7 @@ public class Player extends Entity {
                 }
                 if(attacking == true)  //Attacking sprites
                 {
-                    tempScreenY = screenY - gp.tileSize;    //Adjusted the player's position one tile to up. Explained why I did it at where I call attacking() in update().
+                    tempScreenY = tempScreenY - gp.tileSize;    //Adjusted the player's position one tile to up.
                     if(spriteNum == 1) {image = attackUp1;}
                     if(spriteNum == 2) {image = attackUp2;}
                 }
@@ -1007,7 +1014,7 @@ public class Player extends Entity {
                 }
                 if(attacking == true)  //Attacking sprites
                 {
-                    tempScreenX = screenX - gp.tileSize;    //Adjusted the player's position one tile left. Explained why I did it at where I call attacking() in update().
+                    tempScreenX = tempScreenX - gp.tileSize;    //Adjusted the player's position one tile left.
                     if(spriteNum == 1) {image = attackLeft1;}
                     if(spriteNum == 2) {image = attackLeft2;}
                 }

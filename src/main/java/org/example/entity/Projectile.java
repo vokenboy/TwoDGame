@@ -34,29 +34,29 @@ public class Projectile extends Entity implements Cloneable {
     public void update()
     {
 
-        if(user == gp.player)
+        if(user instanceof Player shooter)
         {
             int monsterIndex = gp.cChecker.checkEntity(this,gp.monster);
             if(monsterIndex != 999) //collision with monster
             {
-                gp.player.damageMonster(monsterIndex, this, attack * (1 + (gp.player.level / 2)), knockBackPower);   //attack : projectile's attack (2) // fireball dmg increases in every 2 levels
+                shooter.damageMonster(monsterIndex, this, attack * (1 + (shooter.level / 2)), knockBackPower);   //attack : projectile's attack (2) // fireball dmg increases in every 2 levels
                 generateParticle(user.projectile,gp.monster[gp.currentMap][monsterIndex]);
                 alive = false;
             }
         }
-        if(user != gp.player)
+        else
         {
-            boolean contactPlayer = gp.cChecker.checkPlayer(this);
-            if(gp.player.invincible == false && contactPlayer == true)
+            Player contactPlayer = gp.cChecker.checkPlayer(this);
+            if(contactPlayer != null && contactPlayer.invincible == false)
             {
-                damagePlayer(attack);
-                if(gp.player.guarding == true)
+                damagePlayer(contactPlayer, attack);
+                if(contactPlayer.guarding == true)
                 {
                     generateParticle(user.projectile,user.projectile);
                 }
                 else
                 {
-                    generateParticle(user.projectile,gp.player);
+                    generateParticle(user.projectile,contactPlayer);
                 }
 
                 alive = false;

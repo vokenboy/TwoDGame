@@ -31,15 +31,16 @@ public class Lighting {
         Graphics2D g2 = (Graphics2D)darknessFilter.getGraphics();
 
 
-        if(gp.player.currentLight == null)
+        org.example.entity.Player cam = gp.getActiveCamera();
+        if(cam.currentLight == null)
         {
             g2.setColor(new Color (0,0,0.08f,0.97f));
         }
         else
         {
             //Get the center x and y of the light circle
-            int centerX = gp.player.screenX + (gp.tileSize)/2;
-            int centerY = gp.player.screenY + (gp.tileSize)/2;
+            int centerX = cam.screenX + (gp.tileSize)/2;
+            int centerY = cam.screenY + (gp.tileSize)/2;
 
             //Create a gradation effect within the light circle
             Color color[] = new Color[12];
@@ -72,7 +73,7 @@ public class Lighting {
             fraction[11] = 1f;    //Edge
 
             //Create a gradation paint settings for the light circle
-            RadialGradientPaint gPaint = new RadialGradientPaint(centerX,centerY,gp.player.currentLight.lightRadius,fraction, color);
+            RadialGradientPaint gPaint = new RadialGradientPaint(centerX,centerY,cam.currentLight.lightRadius,fraction, color);
 
             //Set the gradient data on g2
             g2.setPaint(gPaint);
@@ -89,10 +90,11 @@ public class Lighting {
     }
     public void update()
     {
-        if(gp.player.lightUpdated == true)
+        org.example.entity.Player cam = gp.getActiveCamera();
+        if(cam.lightUpdated == true)
         {
             setLightSource();
-            gp.player.lightUpdated = false;
+            cam.lightUpdated = false;
         }
 
         //Check the state of the day
@@ -159,4 +161,3 @@ public class Lighting {
         g2.drawString(situation,800,500);
     }
 }
-
