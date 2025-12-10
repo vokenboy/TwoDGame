@@ -7,8 +7,10 @@ public class KeyboardAdapter implements Controls, KeyListener {
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
     private boolean pausePressed, characterPressed, mapPressed, escapePressed, achievementsPressed;
-
     private boolean enterPressed, interactPressed, shotPressed, altShotPressed, spacePressed;
+    private boolean chatPressed;
+
+    private ChatInputSink chatSink;
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -29,6 +31,17 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_M -> mapPressed = true;
             case KeyEvent.VK_ESCAPE -> escapePressed = true;
             case KeyEvent.VK_H -> achievementsPressed = true;
+            case KeyEvent.VK_T -> chatPressed = true;
+        }
+
+        if (chatSink != null) {
+            if (code == KeyEvent.VK_BACK_SPACE) {
+                chatSink.onBackspace();
+            } else if (code == KeyEvent.VK_ENTER) {
+                chatSink.onSubmit();
+            } else if (code == KeyEvent.VK_ESCAPE) {
+                chatSink.onCancel();
+            }
         }
     }
 
@@ -51,11 +64,16 @@ public class KeyboardAdapter implements Controls, KeyListener {
             case KeyEvent.VK_M -> mapPressed = false;
             case KeyEvent.VK_ESCAPE -> escapePressed = false;
             case KeyEvent.VK_H -> achievementsPressed = false;
+            case KeyEvent.VK_T -> chatPressed = false;
         }
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+        if (chatSink != null) {
+            chatSink.onTypedChar(e.getKeyChar());
+        }
+    }
     @Override
     public boolean isUpPressed() { return upPressed; }
     @Override
@@ -88,14 +106,21 @@ public class KeyboardAdapter implements Controls, KeyListener {
     public boolean isEscapePressed() { return escapePressed; }
     @Override
     public boolean isAchievementsPressed() { return achievementsPressed; }
+    @Override
+    public boolean isChatPressed() { return chatPressed; }
 
 
     @Override
     public void update() {}
 
+    public void setChatInputSink(ChatInputSink sink) {
+        this.chatSink = sink;
+    }
+
     public void resetKeys() {
         upPressed = downPressed = leftPressed = rightPressed = false;
         enterPressed = interactPressed = shotPressed = altShotPressed = spacePressed = false; // reset all
+        chatPressed = false;
     }
 }
 

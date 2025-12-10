@@ -879,25 +879,29 @@ public class Player extends Entity {
     }
 
     private void updateVisitAchievements(int mapIndex) {
-        switch (mapIndex) {
-            case 0 -> setAchievementProgress("map0_visit", 1);
-            case 1 -> setAchievementProgress("map1_visit", 1);
-            case 2 -> setAchievementProgress("map2_visit", 1);
-            default -> {}
+        int area = gp.currentArea;
+        if (mapIndex == 0 || area == gp.outside) {
+            setAchievementProgress("map0_visit", 1);
+        }
+        if (mapIndex == 1 || area == gp.indoor) {
+            setAchievementProgress("map1_visit", 1);
+        }
+        if (mapIndex == 2 || area == gp.dungeon) {
+            setAchievementProgress("map2_visit", 1);
         }
     }
 
     private void updateKillAchievements(int mapIndex, int killsOnMap) {
-        switch (mapIndex) {
-            case 0 -> {
-                setAchievementProgress("map0_first_blood", killsOnMap);
-                setAchievementProgress("map0_hunter", killsOnMap);
-                setAchievementProgress("map0_defender", killsOnMap);
-                setAchievementProgress("map0_purifier", killsOnMap);
-            }
-            case 1 -> setAchievementProgress("map1_sweeper", killsOnMap);
-            case 2 -> setAchievementProgress("map2_stalker", killsOnMap);
-            default -> {}
+        int area = gp.currentArea;
+        if (mapIndex == 0 || area == gp.outside) {
+            setAchievementProgress("map0_first_blood", killsOnMap);
+            setAchievementProgress("map0_hunter", killsOnMap);
+        }
+        if (mapIndex == 1 || area == gp.indoor) {
+            setAchievementProgress("map1_sweeper", killsOnMap);
+        }
+        if (mapIndex == 2 || area == gp.dungeon) {
+            setAchievementProgress("map2_stalker", killsOnMap);
         }
     }
 

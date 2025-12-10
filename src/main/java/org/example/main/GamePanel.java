@@ -22,6 +22,8 @@ import org.example.main.net.WorldStateSynchronizer;
 import org.example.main.sound.RealSound;
 import org.example.main.sound.SoundInterface;
 import org.example.main.sound.SoundProxy;
+import org.example.main.net.chat.ChatManager;
+import org.example.main.net.chat.PlayerColleague;
 import org.example.tile.Map;
 import org.example.tile.TileManager;
 import org.example.tile_interactive.InteractiveTile;
@@ -131,6 +133,10 @@ public class GamePanel extends JPanel implements Runnable {
     private long netTick = 0;
     private MultiplayerServer server;
     private MultiplayerClient client;
+    public ChatManager chatManager;
+    private PlayerColleague playerColleague;
+    public boolean chatInputActive = false;
+    private final StringBuilder chatInputBuffer = new StringBuilder();
 
     public GamePanel() {
         // constructor
@@ -152,6 +158,10 @@ public class GamePanel extends JPanel implements Runnable {
 
         Player local = addPlayer(localInput, "Player 1", 0);
         this.player = local;
+
+        this.chatManager = new ChatManager(this);
+        this.playerColleague = new PlayerColleague(this, chatManager, "0", local.name);
+        this.chatManager.registerLocal("0", playerColleague);
     }
 
     public void setupGame() {
@@ -236,6 +246,11 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void update() {
         keyH.update();
+
+        // Always pull incoming chat for clients regardless of game state.
+        if (isClient && chatManager != null) {
+            chatManager.pollIncoming();
+        }
 
         for (Player p : players) {
             if (p != null && p.getInput() != null) {
@@ -548,6 +563,50 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    public void sendChat(String text) {
+        if (chatManager != null && playerColleague != null && text != null) {
+            playerColleague.sendChat(text);
+        }
+    }
+
+    public void openChatInput() {
+        chatInputActive = true;
+        chatInputBuffer.setLength(0);
+    }
+
+    public void cancelChatInput() {
+        chatInputActive = false;
+        chatInputBuffer.setLength(0);
+    }
+
+    public void appendChatChar(char c) {
+        if (!chatInputActive) return;
+        if (c == '\n' || c == '\r' || c == '\t') return;
+        if (chatInputBuffer.length() >= 200) return;
+        chatInputBuffer.append(c);
+    }
+
+    public void backspaceChatInput() {
+        if (!chatInputActive) return;
+        if (chatInputBuffer.length() > 0) {
+            chatInputBuffer.setLength(chatInputBuffer.length() - 1);
+        }
+    }
+
+    public void submitChatInput() {
+        if (!chatInputActive) return;
+        String text = chatInputBuffer.toString().trim();
+        if (!text.isEmpty()) {
+            sendChat(text);
+        }
+        chatInputActive = false;
+        chatInputBuffer.setLength(0);
+    }
+
+    public String getChatInputText() {
+        return chatInputBuffer.toString();
+    }
+
     public void startHosting() {
         isHost = true;
         isClient = false;
@@ -558,10 +617,18 @@ public class GamePanel extends JPanel implements Runnable {
         if (server != null) {
             server.stop();
         }
+        if (chatManager != null) {
+            chatManager.clearLocals();
+        }
         server = new MultiplayerServer(this, networkPort);
         server.start();
         player.setNetworkId(0);
         playersById.put(0, player);
+        chatManager.setServer(server);
+        if (playerColleague != null) {
+            playerColleague.setIdentity("0", player.name);
+            chatManager.registerLocal("0", playerColleague);
+        }
     }
 
     public boolean joinHost(String ip) {
@@ -585,6 +652,12 @@ public class GamePanel extends JPanel implements Runnable {
                 : client.getAssignedName();
             players.add(player);
             playersById.put(localPlayerId, player);
+            chatManager.setClient(client);
+            if (playerColleague != null) {
+                chatManager.clearLocals();
+                playerColleague.setIdentity(Integer.toString(localPlayerId), player.name);
+                chatManager.registerLocal(Integer.toString(localPlayerId), playerColleague);
+            }
         } else {
             isClient = false;
         }

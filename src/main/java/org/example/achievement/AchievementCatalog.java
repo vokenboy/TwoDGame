@@ -30,18 +30,7 @@ public final class AchievementCatalog {
                 15,
                 5
         ));
-        add(map0, "map0_defender", new SingleAchievement(
-                "Village Defender",
-                "Defeat 15 monsters on the Outside map",
-                25,
-                15
-        ));
-        add(map0, "map0_purifier", new SingleAchievement(
-                "Field Purifier",
-                "Defeat 30 monsters on the Outside map",
-                35,
-                30
-        ));
+        // Higher kill counts felt grindy, so the 15 and 30 kill tiers were removed.
 
         // Map 1 (Indoor) — a few achievements
         AchievementGroup map1 = new AchievementGroup("Indoor", "House & merchant zone achievements");

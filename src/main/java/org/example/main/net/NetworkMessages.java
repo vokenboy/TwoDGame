@@ -24,6 +24,13 @@ public final class NetworkMessages {
         public PlayerInput.SimpleInputState input;
     }
 
+    public static class ChatMessage implements Serializable {
+
+        public int senderId;
+        public String senderName;
+        public Object event; // ChatEvent (kept as Object to avoid tight coupling)
+    }
+
     public static class WorldState implements Serializable {
 
         public long tick;

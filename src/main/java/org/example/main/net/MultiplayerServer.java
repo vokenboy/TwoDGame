@@ -97,6 +97,12 @@ public class MultiplayerServer {
         return snapshot;
     }
 
+    public void broadcastChat(NetworkMessages.ChatMessage chat) {
+        for (ClientHandler handler : clients.values()) {
+            handler.send(chat);
+        }
+    }
+
     public void broadcastState(NetworkMessages.WorldState state) {
         for (ClientHandler handler : clients.values()) {
             handler.send(state);
@@ -143,6 +149,11 @@ public class MultiplayerServer {
                         if (remote != null) {
                             remote.applyState(inputMessage.input);
                         }
+                    } else if (obj instanceof NetworkMessages.ChatMessage chat) {
+                        if (gp.chatManager != null) {
+                            gp.chatManager.onServerChatReceived(chat);
+                        }
+                        broadcastChat(chat);
                     }
                 }
             } catch (EOFException eof) {
@@ -167,9 +178,11 @@ public class MultiplayerServer {
             }
             try {
                 if (out != null) {
-                    out.reset();
-                    out.writeObject(state);
-                    out.flush();
+                    synchronized (out) {
+                        out.reset();
+                        out.writeObject(state);
+                        out.flush();
+                    }
                 }
             } catch (IOException ignored) {}
         }
@@ -178,6 +191,21 @@ public class MultiplayerServer {
             PlayerInput.SimpleInputState tmp = latestInput;
             latestInput = null;
             return tmp;
+        }
+
+        void send(NetworkMessages.ChatMessage chat) {
+            if (!ready) {
+                return;
+            }
+            try {
+                if (out != null) {
+                    synchronized (out) {
+                        out.reset();
+                        out.writeObject(chat);
+                        out.flush();
+                    }
+                }
+            } catch (IOException ignored) {}
         }
     }
 }

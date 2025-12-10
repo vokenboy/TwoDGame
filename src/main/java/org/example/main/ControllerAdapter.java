@@ -117,4 +117,5 @@ public class ControllerAdapter implements Controls {
     @Override public boolean isMapPressed() { return mapPressed; }
     @Override public boolean isEscapePressed() { return escapePressed; }
     @Override public boolean isAchievementsPressed() { return achievementsPressed; }
+    @Override public boolean isChatPressed() { return false; }
 }

@@ -7,7 +7,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import org.example.main.net.chat.ChatEvent;
 
 /**
  * Client connector. Sends local input to the host and consumes authoritative world state.
@@ -23,6 +27,7 @@ public class MultiplayerClient {
     private int playerId = -1;
     private String assignedName = "";
     private final AtomicReference<NetworkMessages.WorldState> latestState = new AtomicReference<>();
+    private final Queue<NetworkMessages.ChatMessage> chatQueue = new ConcurrentLinkedQueue<>();
 
     public MultiplayerClient(GamePanel gp, String host, int port) {
         this.gp = gp;
@@ -66,6 +71,8 @@ public class MultiplayerClient {
                 Object obj = in.readObject();
                 if (obj instanceof NetworkMessages.WorldState ws) {
                     latestState.set(ws);
+                } else if (obj instanceof NetworkMessages.ChatMessage chat) {
+                    chatQueue.add(chat);
                 }
             }
         } catch (Exception e) {
@@ -83,15 +90,41 @@ public class MultiplayerClient {
         msg.playerId = playerId;
         msg.input = input;
         try {
-            out.reset();
-            out.writeObject(msg);
-            out.flush();
+            synchronized (out) {
+                out.reset();
+                out.writeObject(msg);
+                out.flush();
+            }
         } catch (IOException ignored) {
         }
     }
 
     public NetworkMessages.WorldState consumeWorldState() {
         return latestState.getAndSet(null);
+    }
+
+    public void sendChat(ChatEvent event) {
+        if (!running || out == null || event == null) return;
+        NetworkMessages.ChatMessage msg = new NetworkMessages.ChatMessage();
+        msg.senderId = playerId;
+        msg.senderName = assignedName;
+        msg.event = event;
+        try {
+            synchronized (out) {
+                out.reset();
+                out.writeObject(msg);
+                out.flush();
+            }
+        } catch (IOException ignored) {}
+    }
+
+    public List<NetworkMessages.ChatMessage> pollChatMessages() {
+        List<NetworkMessages.ChatMessage> outMsgs = new java.util.ArrayList<>();
+        NetworkMessages.ChatMessage m;
+        while ((m = chatQueue.poll()) != null) {
+            outMsgs.add(m);
+        }
+        return outMsgs;
     }
 
     public int getPlayerId() {

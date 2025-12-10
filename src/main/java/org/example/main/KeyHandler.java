@@ -24,6 +24,7 @@ public class KeyHandler extends KeyAdapter {
     private final GamePanel gp;
     public boolean upPressed, downPressed, leftPressed, rightPressed;
     public boolean enterPressed, shotKeyPressed, altShotKeyPressed, spacePressed, achievementsPressed;
+    public boolean chatPressed;
     public boolean enterOnce;
     public boolean interactPressed, interactOnce;
     public int mpSelectionIndex = 0;
@@ -32,8 +33,41 @@ public class KeyHandler extends KeyAdapter {
     private boolean prevLeft, prevRight;
     private boolean prevUp, prevDown, prevEnter, prevInteract;
     private boolean prevShot, prevAltShot;
+    private boolean prevChat;
     public boolean showDebugText = false;
     public boolean godModeOn = false;
+
+    private final ChatInputSink chatSink = new ChatInputSink() {
+        @Override
+        public void onTypedChar(char c) {
+            if (!gp.chatInputActive) return;
+            if (!Character.isISOControl(c)) {
+                gp.appendChatChar(c);
+            }
+        }
+
+        @Override
+        public void onBackspace() {
+            if (!gp.chatInputActive) return;
+            gp.backspaceChatInput();
+        }
+
+        @Override
+        public void onSubmit() {
+            if (!gp.chatInputActive) return;
+            gp.submitChatInput();
+            if (!gp.chatInputActive) {
+                detachChatSink();
+            }
+        }
+
+        @Override
+        public void onCancel() {
+            if (!gp.chatInputActive) return;
+            gp.cancelChatInput();
+            detachChatSink();
+        }
+    };
 
     public KeyHandler(GamePanel gp) {
         this.gp = gp;
@@ -65,8 +99,33 @@ public class KeyHandler extends KeyAdapter {
         achievementsPressed =
             keyboard.isAchievementsPressed() ||
             controller.isAchievementsPressed();
+        chatPressed = keyboard.isChatPressed() || controller.isChatPressed();
         enterOnce = justPressed(enterPressed, prevEnter);
         interactOnce = justPressed(interactPressed, prevInteract);
+
+        // Handle chat toggle at the input layer so it works for host and client paths.
+        boolean chatToggle =
+            gp.gameState == gp.playState && justPressed(chatPressed, prevChat);
+        if (chatToggle) {
+            if (!gp.chatInputActive) {
+                gp.openChatInput();
+                attachChatSink();
+            } else {
+                gp.cancelChatInput();
+                detachChatSink();
+            }
+        }
+
+        // When chat is active, ignore gameplay controls (leave only the sink-driven enter/backspace/typing).
+        if (gp.chatInputActive) {
+            upPressed = downPressed = leftPressed = rightPressed = false;
+            enterPressed = false;
+            interactPressed = false;
+            shotKeyPressed = false;
+            altShotKeyPressed = false;
+            spacePressed = false;
+            achievementsPressed = false;
+        }
 
         boolean pausePressed =
             keyboard.isPausePressed() || controller.isPausePressed();
@@ -80,6 +139,14 @@ public class KeyHandler extends KeyAdapter {
             achievementsPressed,
             prevAchievements
         );
+
+        if (gp.chatInputActive) {
+            pausePressed = false;
+            characterPressed = false;
+            mapPressed = false;
+            escapePressed = false;
+            achievementsToggle = false;
+        }
 
         if (gp.gameState == gp.titleState) {
             handleTitleInput();
@@ -126,6 +193,7 @@ public class KeyHandler extends KeyAdapter {
         prevMap = mapPressed;
         prevEscape = escapePressed;
         prevAchievements = achievementsPressed;
+        prevChat = chatPressed;
     }
 
     private void handleTitleInput() {
@@ -452,5 +520,17 @@ public class KeyHandler extends KeyAdapter {
 
         if (confirm) gp.ui.confirmEnchantSelection();
         if (escape) gp.gameState = gp.playState;
+    }
+
+    private void attachChatSink() {
+        if (keyboard instanceof KeyboardAdapter kb) {
+            kb.setChatInputSink(chatSink);
+        }
+    }
+
+    private void detachChatSink() {
+        if (keyboard instanceof KeyboardAdapter kb) {
+            kb.setChatInputSink(null);
+        }
     }
 }

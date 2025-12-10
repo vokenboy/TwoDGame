@@ -1345,6 +1345,30 @@ public class UI {
         }
     }
 
+    private void drawChatInput() {
+        if (!gp.chatInputActive) return;
+        int padding = 12;
+        int height = gp.tileSize * 2;
+        int width = gp.screenWidth - padding * 2;
+        int x = padding;
+        int y = gp.screenHeight - height - padding;
+
+        drawSubWindow(x, y, width, height);
+
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 22F));
+        g2.setColor(Color.white);
+        String text = gp.getChatInputText();
+        boolean caretOn = (System.currentTimeMillis() / 500) % 2 == 0;
+        if (caretOn) {
+            text = text + "_";
+        }
+        g2.drawString("Chat: " + text, x + 20, y + gp.tileSize);
+
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 16F));
+        g2.setColor(new Color(220, 220, 220));
+        g2.drawString("Enter to send, Esc to cancel", x + 20, y + height - 14);
+    }
+
     public void drawTitleScreen() {
         g2.setColor(new Color(0, 0, 0)); // FILL BACKGROUND BLACK
         g2.fillRect(0, 0, gp.screenWidth, gp.screenHeight);
@@ -1799,14 +1823,24 @@ public class UI {
         textY += gp.tileSize;
         AchievementGroup root = gp.player.getAchievementCatalog().getRoot();
         int lineHeight = 26;
-        drawAchievementNode(
-            root,
-            textX,
-            textY,
-            lineHeight,
-            0,
-            frameY + frameHeight - gp.tileSize
+        int maxY = frameY + frameHeight - gp.tileSize;
+        java.util.List<Achievement> sections = selectVisibleAchievementSections(
+            root
         );
+        for (Achievement section : sections) {
+            textY =
+                drawAchievementNode(
+                    section,
+                    textX,
+                    textY,
+                    lineHeight,
+                    0,
+                    maxY
+                );
+            if (textY > maxY) {
+                break;
+            }
+        }
     }
 
     private int drawAchievementNode(
@@ -1876,6 +1910,42 @@ public class UI {
         return startY;
     }
 
+    private java.util.List<Achievement> selectVisibleAchievementSections(
+        AchievementGroup root
+    ) {
+        java.util.List<Achievement> sections = new ArrayList<>();
+        if (root == null) {
+            return sections;
+        }
+        for (Achievement child : root.getChildren()) {
+            if (isSectionForCurrentArea(child)) {
+                sections.add(child);
+            }
+        }
+        if (sections.isEmpty()) {
+            sections.addAll(root.getChildren());
+        }
+        return sections;
+    }
+
+    private boolean isSectionForCurrentArea(Achievement achievement) {
+        if (!(achievement instanceof AchievementGroup group)) {
+            return false;
+        }
+        int area = gp.currentArea;
+        String name = group.getName();
+        if (area == gp.outside) {
+            return "Outside".equalsIgnoreCase(name);
+        }
+        if (area == gp.indoor) {
+            return "Indoor".equalsIgnoreCase(name);
+        }
+        if (area == gp.dungeon) {
+            return "Dungeon".equalsIgnoreCase(name);
+        }
+        return false;
+    }
+
     public void drawSubWindow(int x, int y, int width, int height) {
         Color c = new Color(0, 0, 0, 210); // R,G,B, alfa(opacity)
         g2.setColor(c);
@@ -1932,6 +2002,7 @@ public class UI {
                 drawPlayerLife();
                 drawMonsterLife();
                 drawMessage();
+                drawChatInput();
             }
             //PAUSE STATE
             if (gp.gameState == gp.pauseState) {
