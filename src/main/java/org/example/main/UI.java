@@ -7,11 +7,20 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.example.achievement.Achievement;
+import org.example.achievement.AchievementGroup;
+import org.example.achievement.SingleAchievement;
+import org.example.entity.Entity;
 import org.example.entity.Entity;
 import org.example.entity.decorator.ElementalDecorator;
+import org.example.entity.decorator.ElementalDecorator;
+import org.example.entity.decorator.EquipmentBuilder;
 import org.example.entity.decorator.EquipmentBuilder;
 import org.example.object.OBJ_Coin_Bronze;
+import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
+import org.example.object.OBJ_Heart;
+import org.example.object.OBJ_ManaCrystal;
 import org.example.object.OBJ_ManaCrystal;
 
 public class UI {
@@ -1766,6 +1775,107 @@ public class UI {
         }
     }
 
+    public void drawAchievementsScreen() {
+        int frameX = gp.tileSize;
+        int frameY = gp.tileSize;
+        int frameWidth = gp.screenWidth - (gp.tileSize * 2);
+        int frameHeight = gp.screenHeight - (gp.tileSize * 2);
+        drawSubWindow(frameX, frameY, frameWidth, frameHeight);
+
+        int textX = frameX + gp.tileSize;
+        int textY = frameY + gp.tileSize;
+        g2.setFont(g2.getFont().deriveFont(Font.BOLD, 34F));
+        g2.setColor(Color.white);
+        g2.drawString("Achievements", textX, textY);
+
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 18F));
+        String hint = "[H] or [Esc] to close";
+        int hintX = getXforAlignToRight(
+            hint,
+            frameX + frameWidth - gp.tileSize
+        );
+        g2.drawString(hint, hintX, textY);
+
+        textY += gp.tileSize;
+        AchievementGroup root = gp.player.getAchievementCatalog().getRoot();
+        int lineHeight = 26;
+        drawAchievementNode(
+            root,
+            textX,
+            textY,
+            lineHeight,
+            0,
+            frameY + frameHeight - gp.tileSize
+        );
+    }
+
+    private int drawAchievementNode(
+        Achievement achievement,
+        int baseX,
+        int startY,
+        int lineHeight,
+        int depth,
+        int maxY
+    ) {
+        int x = baseX + depth * 20;
+        if (startY > maxY) {
+            return startY;
+        }
+
+        if (achievement instanceof AchievementGroup group) {
+            int total = group.getChildren().size();
+            int achieved = 0;
+            for (Achievement child : group.getChildren()) {
+                if (child.isAchieved()) {
+                    achieved++;
+                }
+            }
+            g2.setFont(g2.getFont().deriveFont(Font.BOLD, 22F));
+            g2.setColor(
+                group.isAchieved() ? new Color(120, 210, 120) : Color.white
+            );
+            g2.drawString(
+                group.getName() + " (" + achieved + "/" + total + ")",
+                x,
+                startY
+            );
+            startY += lineHeight;
+            for (Achievement child : group.getChildren()) {
+                startY = drawAchievementNode(
+                    child,
+                    baseX,
+                    startY,
+                    lineHeight,
+                    depth + 1,
+                    maxY
+                );
+                if (startY > maxY) {
+                    break;
+                }
+            }
+            return startY;
+        }
+
+        if (achievement instanceof SingleAchievement single) {
+            g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 20F));
+            boolean done = single.isAchieved();
+            g2.setColor(done ? new Color(120, 210, 120) : Color.lightGray);
+            String progress = single.getProgress() + "/" + single.getRequired();
+            String status = done ? "✓" : "…";
+            g2.drawString(
+                single.getName() + " [" + progress + "] " + status,
+                x,
+                startY
+            );
+            startY += 20;
+            g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 16F));
+            g2.setColor(new Color(200, 200, 200));
+            g2.drawString(single.getDescription(), x + 6, startY);
+            startY += lineHeight;
+        }
+        return startY;
+    }
+
     public void drawSubWindow(int x, int y, int width, int height) {
         Color c = new Color(0, 0, 0, 210); // R,G,B, alfa(opacity)
         g2.setColor(c);
@@ -1840,6 +1950,9 @@ public class UI {
             //OPTIONS STATE
             if (gp.gameState == gp.optionsState) {
                 drawOptionsScreen();
+            }
+            if (gp.gameState == gp.achievementsState) {
+                drawAchievementsScreen();
             }
             //GAME OVER STATE
             if (gp.gameState == gp.gameOverState) {

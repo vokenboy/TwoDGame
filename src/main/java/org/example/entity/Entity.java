@@ -36,6 +36,7 @@ public class Entity {
     public boolean attacking = false;
     public boolean alive = true;
     public boolean dying = false;
+    public boolean deathCounted = false;
     public boolean hpBarOn = false;
     public boolean onPath = false;
     public boolean knockBack = false;

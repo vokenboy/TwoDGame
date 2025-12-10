@@ -5,9 +5,16 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.example.achievement.Achievement;
+import org.example.achievement.AchievementCatalog;
+import org.example.achievement.MapKillTracker;
+import org.example.achievement.MapVisitTracker;
+import org.example.achievement.SingleAchievement;
 import org.example.main.GamePanel;
+import org.example.main.KeyHandler;
 import org.example.main.PlayerObserver;
 import org.example.main.input.PlayerInput;
+import org.example.object.*;
 import org.example.object.*;
 import org.example.tile_interactive.InteractiveTile;
 import org.example.visitor.ChopVisitor;
@@ -26,6 +33,7 @@ public class Player extends Entity {
 
     private List<PlayerObserver> observers = new ArrayList<>();
     private final Random combatRandom = new Random();
+    private AchievementCatalog achievementCatalog = new AchievementCatalog();
 
     public Player(GamePanel gp, PlayerInput input) {
         super(gp); // calling constructor of super class(from entity class)
@@ -80,6 +88,16 @@ public class Player extends Entity {
         }
     }
 
+    public AchievementCatalog getAchievementCatalog() {
+        return achievementCatalog;
+    }
+
+    public void resetAchievementProgress() {
+        achievementCatalog = new AchievementCatalog();
+        MapKillTracker.reset();
+        MapVisitTracker.reset();
+    }
+
     public PlayerInput getInput() {
         return input;
     }
@@ -93,6 +111,7 @@ public class Player extends Entity {
     }
 
     public void setDefaultValues() {
+        resetAchievementProgress();
         //Default Starting Positions
         worldX = gp.tileSize * 23;
         worldY = gp.tileSize * 21;
@@ -134,6 +153,7 @@ public class Player extends Entity {
         getGuardImage();
         setItems();
         //setDialogue();
+        trackMapVisit();
     }
 
     public void setDefaultPositions() {
@@ -409,6 +429,7 @@ public class Player extends Entity {
     }
 
     public void update() {
+        trackMapVisit();
         if (knockBack == true) {
             collisionOn = false;
             gp.cChecker.checkTile(this);
@@ -852,6 +873,41 @@ public class Player extends Entity {
         return result;
     }
 
+    private void trackMapVisit() {
+        MapVisitTracker.markVisited(gp.currentMap);
+        updateVisitAchievements(gp.currentMap);
+    }
+
+    private void updateVisitAchievements(int mapIndex) {
+        switch (mapIndex) {
+            case 0 -> setAchievementProgress("map0_visit", 1);
+            case 1 -> setAchievementProgress("map1_visit", 1);
+            case 2 -> setAchievementProgress("map2_visit", 1);
+            default -> {}
+        }
+    }
+
+    private void updateKillAchievements(int mapIndex, int killsOnMap) {
+        switch (mapIndex) {
+            case 0 -> {
+                setAchievementProgress("map0_first_blood", killsOnMap);
+                setAchievementProgress("map0_hunter", killsOnMap);
+                setAchievementProgress("map0_defender", killsOnMap);
+                setAchievementProgress("map0_purifier", killsOnMap);
+            }
+            case 1 -> setAchievementProgress("map1_sweeper", killsOnMap);
+            case 2 -> setAchievementProgress("map2_stalker", killsOnMap);
+            default -> {}
+        }
+    }
+
+    private void setAchievementProgress(String key, int value) {
+        Achievement achievement = achievementCatalog.get(key);
+        if (achievement instanceof SingleAchievement single) {
+            single.setProgress(value);
+        }
+    }
+
     public void damageMonster(
         int i,
         Entity attacker,
@@ -889,11 +945,14 @@ public class Player extends Entity {
                 // Notify observers (if you use PlayerObserver)
                 notifyMonsterDamaged(target, damage);
 
-                // Handle death
-                if (target.life <= 0 && !target.dying) {
+                // Handle death (count once even if dying was set inside takeDamage)
+                if (target.life <= 0 && !target.deathCounted) {
+                    target.deathCounted = true;
                     target.dying = true;
                     gp.ui.addMessage("Killed the " + target.name + "!");
                     gp.ui.addMessage("Exp +" + target.exp + "!");
+                    int killsOnMap = MapKillTracker.increment(gp.currentMap);
+                    updateKillAchievements(gp.currentMap, killsOnMap);
                     exp += target.exp;
                     checkLevelUp();
                 }
