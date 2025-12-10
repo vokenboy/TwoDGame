@@ -1,6 +1,7 @@
 package org.example.main;
 
 import org.example.entity.Entity;
+import org.example.entity.Player;
 import org.example.main.sound.SoundInterface;
 import org.example.main.sound.SoundProxy;
 
@@ -61,14 +62,13 @@ public class GameFacade {
         return se.getVolumeScale();
     }
 
-
     public void playAreaMusic(int area, int outside, int indoor, int dungeon) {
         stopBackgroundMusic();
-        if(area == outside) {
+        if (area == outside) {
             playBackgroundMusic(0);
-        } else if(area == indoor) {
+        } else if (area == indoor) {
             playBackgroundMusic(18);
-        } else if(area == dungeon) {
+        } else if (area == dungeon) {
             playBackgroundMusic(19);
         }
     }
@@ -93,15 +93,17 @@ public class GameFacade {
         cChecker.checkEntity(entity, gp.monster);
 
         // Check interactive tile collisions (only for player)
-        if(isPlayer) {
+        if (isPlayer) {
             cChecker.checkEntity(entity, gp.iTile);
         }
 
         return entity.collisionOn;
     }
 
-
-    public CollisionResult checkCollisionWithIndex(Entity entity, boolean isPlayer) {
+    public CollisionResult checkCollisionWithIndex(
+        Entity entity,
+        boolean isPlayer
+    ) {
         entity.collisionOn = false;
 
         CollisionResult result = new CollisionResult();
@@ -120,13 +122,15 @@ public class GameFacade {
         result.monsterIndex = cChecker.checkEntity(entity, gp.monster);
 
         // Check if player is touching interactive tile
-        if(isPlayer) {
-            result.interactiveTileIndex = cChecker.checkEntity(entity, gp.iTile);
+        if (isPlayer) {
+            result.interactiveTileIndex = cChecker.checkEntity(
+                entity,
+                gp.iTile
+            );
         }
 
         return result;
     }
-
 
     public boolean canEntityMove(Entity entity) {
         entity.collisionOn = false;
@@ -161,11 +165,9 @@ public class GameFacade {
         gp.player.pickUpObject(objIndex);
     }
 
-
-    public boolean monsterContactedPlayer(Entity monster) {
+    public Player monsterContactedPlayer(Entity monster) {
         return cChecker.checkPlayer(monster);
     }
-
 
     public int checkObjectInteraction(Entity entity) {
         return cChecker.checkObject(entity, true);
@@ -183,9 +185,8 @@ public class GameFacade {
     // HELPER METHODS (Combining Systems)
     // ============================================
 
-
     public void playCollisionSound(Entity entity) {
-        if(entity.collisionOn) {
+        if (entity.collisionOn) {
             playSoundEffect(15); // blocked sound
         }
     }
@@ -194,8 +195,8 @@ public class GameFacade {
     // INNER CLASS - Collision Result
     // ============================================
 
-
     public static class CollisionResult {
+
         public boolean tileCollision = false;
         public int objectIndex = 999;
         public int npcIndex = 999;
@@ -203,16 +204,21 @@ public class GameFacade {
         public int interactiveTileIndex = 999;
 
         public boolean hasAnyCollision() {
-            return tileCollision || objectIndex != 999 || npcIndex != 999
-                    || monsterIndex != 999 || interactiveTileIndex != 999;
+            return (
+                tileCollision ||
+                objectIndex != 999 ||
+                npcIndex != 999 ||
+                monsterIndex != 999 ||
+                interactiveTileIndex != 999
+            );
         }
 
         public String getCollisionType() {
-            if(tileCollision) return "tile";
-            if(objectIndex != 999) return "object";
-            if(npcIndex != 999) return "npc";
-            if(monsterIndex != 999) return "monster";
-            if(interactiveTileIndex != 999) return "interactive tile";
+            if (tileCollision) return "tile";
+            if (objectIndex != 999) return "object";
+            if (npcIndex != 999) return "npc";
+            if (monsterIndex != 999) return "monster";
+            if (interactiveTileIndex != 999) return "interactive tile";
             return "none";
         }
     }

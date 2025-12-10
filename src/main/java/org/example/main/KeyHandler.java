@@ -1,5 +1,7 @@
 package org.example.main;
 
+import java.awt.event.KeyAdapter;
+import org.example.commands.AltCastSpellCommand;
 import org.example.commands.AttackCommand;
 import org.example.commands.CastSpellCommand;
 import org.example.commands.Command;
@@ -7,8 +9,6 @@ import org.example.commands.MoveDownCommand;
 import org.example.commands.MoveLeftCommand;
 import org.example.commands.MoveRightCommand;
 import org.example.commands.MoveUpCommand;
-import org.example.commands.AltCastSpellCommand;
-import java.awt.event.KeyAdapter;
 
 public class KeyHandler extends KeyAdapter {
 
@@ -26,6 +26,8 @@ public class KeyHandler extends KeyAdapter {
     public boolean enterPressed, shotKeyPressed, altShotKeyPressed, spacePressed;
     public boolean enterOnce;
     public boolean interactPressed, interactOnce;
+    public int mpSelectionIndex = 0;
+    public boolean mpHostMode = true;
     private boolean prevPause, prevCharacter, prevMap, prevEscape;
     private boolean prevLeft, prevRight;
     private boolean prevUp, prevDown, prevEnter, prevInteract;
@@ -54,25 +56,38 @@ public class KeyHandler extends KeyAdapter {
         rightPressed = keyboard.isRightPressed() || controller.isRightPressed();
 
         enterPressed = keyboard.isEnterPressed() || controller.isEnterPressed();
-        interactPressed = keyboard.isInteractPressed() || controller.isInteractPressed();
+        interactPressed =
+            keyboard.isInteractPressed() || controller.isInteractPressed();
         shotKeyPressed = keyboard.isShotPressed() || controller.isShotPressed();
-        altShotKeyPressed = keyboard.isAltShotPressed() || controller.isAltShotPressed();
+        altShotKeyPressed =
+            keyboard.isAltShotPressed() || controller.isAltShotPressed();
         spacePressed = keyboard.isSpacePressed() || controller.isSpacePressed();
         enterOnce = justPressed(enterPressed, prevEnter);
         interactOnce = justPressed(interactPressed, prevInteract);
 
-        boolean pausePressed = keyboard.isPausePressed() || controller.isPausePressed();
-        boolean characterPressed = keyboard.isCharacterPressed() || controller.isCharacterPressed();
-        boolean mapPressed = keyboard.isMapPressed() || controller.isMapPressed();
-        boolean escapePressed = keyboard.isEscapePressed() || controller.isEscapePressed();
+        boolean pausePressed =
+            keyboard.isPausePressed() || controller.isPausePressed();
+        boolean characterPressed =
+            keyboard.isCharacterPressed() || controller.isCharacterPressed();
+        boolean mapPressed =
+            keyboard.isMapPressed() || controller.isMapPressed();
+        boolean escapePressed =
+            keyboard.isEscapePressed() || controller.isEscapePressed();
 
         if (gp.gameState == gp.titleState) {
             handleTitleInput();
         } else if (gp.gameState == gp.playState) {
-            handlePlayInput(pausePressed, characterPressed, mapPressed, escapePressed);
+            handlePlayInput(
+                pausePressed,
+                characterPressed,
+                mapPressed,
+                escapePressed
+            );
         } else if (gp.gameState == gp.pauseState) {
             handlePauseInput();
-        } else if (gp.gameState == gp.dialogueState || gp.gameState == gp.cutsceneState) {
+        } else if (
+            gp.gameState == gp.dialogueState || gp.gameState == gp.cutsceneState
+        ) {
             handleDialogueInput();
         } else if (gp.gameState == gp.characterState) {
             handleCharacterInput();
@@ -84,7 +99,7 @@ public class KeyHandler extends KeyAdapter {
             handleTradeInput();
         } else if (gp.gameState == gp.mapState) {
             handleMapInput();
-        } else if(gp.gameState == gp.enchantState) {
+        } else if (gp.gameState == gp.enchantState) {
             handleEnchantInput();
         }
 
@@ -110,12 +125,12 @@ public class KeyHandler extends KeyAdapter {
         if (gp.ui.titleScreenState == 0) {
             if (up) {
                 gp.ui.commandNum--;
-                if (gp.ui.commandNum < 0) gp.ui.commandNum = 2;
+                if (gp.ui.commandNum < 0) gp.ui.commandNum = 3;
                 gp.gameFacade.playSoundEffect(9);
             }
             if (down) {
                 gp.ui.commandNum++;
-                if (gp.ui.commandNum > 2) gp.ui.commandNum = 0;
+                if (gp.ui.commandNum > 3) gp.ui.commandNum = 0;
                 gp.gameFacade.playSoundEffect(9);
             }
 
@@ -123,17 +138,19 @@ public class KeyHandler extends KeyAdapter {
                 switch (gp.ui.commandNum) {
                     case 0 -> gp.ui.titleScreenState = 1;
                     case 1 -> {
+                        gp.ui.titleScreenState = 2;
+                        gp.ui.commandNum = 0;
+                    }
+                    case 2 -> {
                         gp.saveLoad.load();
                         gp.gameState = gp.playState;
                         gp.gameFacade.playSoundEffect(0);
                     }
-                    case 2 -> System.exit(0);
+                    case 3 -> System.exit(0);
                 }
             }
-        }
-
-        else if (gp.ui.titleScreenState == 1) {
-            int maxClasses = 3; // Fighter, Thief, Sorcerer, Back (0–3)
+        } else if (gp.ui.titleScreenState == 1) {
+            int maxClasses = 3; // Fighter, Thief, Sorcerer, Back (0-3)
 
             if (up) {
                 gp.ui.commandNum--;
@@ -159,14 +176,68 @@ public class KeyHandler extends KeyAdapter {
                 gp.gameState = gp.playState;
                 gp.gameFacade.playSoundEffect(0);
             }
+        } else if (gp.ui.titleScreenState == 2) {
+            if (up) {
+                mpSelectionIndex--;
+                if (mpSelectionIndex < 0) mpSelectionIndex = 3;
+                gp.gameFacade.playSoundEffect(9);
+            }
+            if (down) {
+                mpSelectionIndex++;
+                if (mpSelectionIndex > 3) mpSelectionIndex = 0;
+                gp.gameFacade.playSoundEffect(9);
+            }
+
+            if (enter) {
+                switch (mpSelectionIndex) {
+                    case 0 -> {
+                        mpHostMode = !mpHostMode;
+                        gp.gameFacade.playSoundEffect(9);
+                    }
+                    case 1 -> {
+                        // Placeholder: IP editing can be wired to UI later.
+                        gp.hostAddress = "127.0.0.1";
+                        gp.gameFacade.playSoundEffect(9);
+                    }
+                    case 2 -> {
+                        gp.gameFacade.playSoundEffect(0);
+                        if (mpHostMode) {
+                            gp.isHost = true;
+                            gp.isClient = false;
+                            gp.startHosting();
+                            gp.gameState = gp.playState;
+                        } else {
+                            gp.isHost = false;
+                            gp.isClient = true;
+                            if (gp.joinHost(gp.hostAddress)) {
+                                gp.gameState = gp.playState;
+                            } else {
+                                gp.ui.addMessage("Failed to join host");
+                                gp.ui.titleScreenState = 0;
+                            }
+                        }
+                    }
+                    case 3 -> {
+                        gp.ui.titleScreenState = 0;
+                        gp.ui.commandNum = 0;
+                    }
+                }
+            }
         }
     }
 
-    private void handlePlayInput(boolean pausePressed, boolean characterPressed, boolean mapPressed, boolean escapePressed) {
+    private void handlePlayInput(
+        boolean pausePressed,
+        boolean characterPressed,
+        boolean mapPressed,
+        boolean escapePressed
+    ) {
         if (justPressed(pausePressed, prevPause)) gp.gameState = gp.pauseState;
-        if (justPressed(characterPressed, prevCharacter)) gp.gameState = gp.characterState;
+        if (justPressed(characterPressed, prevCharacter)) gp.gameState =
+            gp.characterState;
         if (justPressed(mapPressed, prevMap)) gp.gameState = gp.mapState;
-        if (justPressed(escapePressed, prevEscape)) gp.gameState = gp.optionsState;
+        if (justPressed(escapePressed, prevEscape)) gp.gameState =
+            gp.optionsState;
 
         if (upPressed) {
             moveUpCommand.execute(gp.player);
@@ -187,12 +258,15 @@ public class KeyHandler extends KeyAdapter {
         if (justPressed(altShotKeyPressed, prevAltShot)) {
             altCastSpellCommand.execute(gp.player);
         }
-
     }
 
     private void handlePauseInput() {
-        if (justPressed(keyboard.isPausePressed() || controller.isPausePressed(), prevPause))
-            gp.gameState = gp.playState;
+        if (
+            justPressed(
+                keyboard.isPausePressed() || controller.isPausePressed(),
+                prevPause
+            )
+        ) gp.gameState = gp.playState;
     }
 
     private void handleDialogueInput() {
@@ -208,8 +282,8 @@ public class KeyHandler extends KeyAdapter {
         boolean right = justPressed(rightPressed, prevRight);
         boolean enter = interactOnce;
         boolean character = justPressed(
-                keyboard.isCharacterPressed() || controller.isCharacterPressed(),
-                prevCharacter
+            keyboard.isCharacterPressed() || controller.isCharacterPressed(),
+            prevCharacter
         );
 
         if (up && gp.ui.playerSlotRow > 0) {
@@ -240,8 +314,8 @@ public class KeyHandler extends KeyAdapter {
         boolean up = justPressed(upPressed, prevUp);
         boolean down = justPressed(downPressed, prevDown);
         boolean escape = justPressed(
-                keyboard.isEscapePressed() || controller.isEscapePressed(),
-                prevEscape
+            keyboard.isEscapePressed() || controller.isEscapePressed(),
+            prevEscape
         );
 
         int maxOptions = 5;
@@ -302,7 +376,8 @@ public class KeyHandler extends KeyAdapter {
                 case 0 -> {
                     gp.gameState = gp.playState;
                     gp.resetGame(false);
-                    gp.gameFacade.playBackgroundMusic(0);                }
+                    gp.gameFacade.playBackgroundMusic(0);
+                }
                 case 1 -> {
                     gp.ui.titleScreenState = 0;
                     gp.gameState = gp.titleState;
@@ -314,7 +389,10 @@ public class KeyHandler extends KeyAdapter {
 
     private void handleTradeInput() {
         // Close trade with interact or escape
-        boolean escape = justPressed(keyboard.isEscapePressed() || controller.isEscapePressed(), prevEscape);
+        boolean escape = justPressed(
+            keyboard.isEscapePressed() || controller.isEscapePressed(),
+            prevEscape
+        );
         if (interactOnce || escape) {
             gp.gameState = gp.playState;
         }
@@ -322,7 +400,12 @@ public class KeyHandler extends KeyAdapter {
 
     private void handleMapInput() {
         // Toggle map only with M
-        if (justPressed(keyboard.isMapPressed() || controller.isMapPressed(), prevMap)) {
+        if (
+            justPressed(
+                keyboard.isMapPressed() || controller.isMapPressed(),
+                prevMap
+            )
+        ) {
             gp.gameState = gp.playState;
         }
     }
@@ -334,7 +417,10 @@ public class KeyHandler extends KeyAdapter {
         boolean left = justPressed(leftPressed, prevLeft);
         boolean right = justPressed(rightPressed, prevRight);
         boolean confirm = interactOnce;
-        boolean escape = justPressed(keyboard.isEscapePressed() || controller.isEscapePressed(), prevEscape);
+        boolean escape = justPressed(
+            keyboard.isEscapePressed() || controller.isEscapePressed(),
+            prevEscape
+        );
 
         // Delegate to UI to update enchant cursor/selection, similar to inventory navigation
         if (up) gp.ui.moveEnchantCursor(-1, 0);

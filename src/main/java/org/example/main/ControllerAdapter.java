@@ -1,119 +1,79 @@
 package org.example.main;
 
-import net.java.games.input.Component;
-import net.java.games.input.Controller;
-import net.java.games.input.ControllerEnvironment;
-
+/**
+ * Placeholder controller adapter that compiles without external libraries.
+ * If you need real gamepad support, add JInput to the classpath and restore
+ * polling logic; for now everything returns false.
+ */
 public class ControllerAdapter implements Controls {
-
-    private boolean upPressed, downPressed, leftPressed, rightPressed;
-    private boolean pausePressed, characterPressed, mapPressed, escapePressed;
-    private boolean enterPressed, interactPressed, shotPressed, altShotPressed, spacePressed;
-
-    private Controller controller;
-    private static final float DEADZONE = 0.3f;
-
-    public ControllerAdapter() {
-        Controller[] controllers = ControllerEnvironment
-                .getDefaultEnvironment()
-                .getControllers();
-
-        for (Controller c : controllers) {
-            String name = c.getName().toLowerCase();
-            if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
-                if (name.contains("xbox") || name.contains("360") || name.contains("xinput")) {
-                    controller = c;
-                    break;
-                }
-                if (controller == null && name.contains("wireless controller")) {
-                    controller = c;
-                }
-            }
-        }
-
-        if (controller != null) {
-            System.out.println("Controller connected: " + controller.getName() + " | Type: " + controller.getType());
-        } else {
-            System.out.println("No controller detected!");
-        }
-    }
 
     @Override
     public void update() {
-        if (controller == null) return;
-
-        controller.poll();
-        Component[] components = controller.getComponents();
-
-        resetInputs();
-
-        for (Component c : components) {
-            float value = c.getPollData();
-            String id = c.getIdentifier().getName();
-
-            switch (id) {
-                case "x" -> {
-                    if (value < -DEADZONE) leftPressed = true;
-                    else if (value > DEADZONE) rightPressed = true;
-                }
-                case "y" -> {
-                    if (value < -DEADZONE) upPressed = true;
-                    else if (value > DEADZONE) downPressed = true;
-                }
-                case "pov" -> {
-                    if (value == 0.25f) upPressed = true;
-                    else if (value == 0.5f) rightPressed = true;
-                    else if (value == 0.75f) downPressed = true;
-                    else if (value == 1.0f) leftPressed = true;
-                }
-            }
-
-            switch (id) {
-                case "0" -> {
-                    enterPressed = value == 1.0f;
-                    interactPressed = value == 1.0f;
-                }
-                case "1" -> shotPressed = value == 1.0f;
-                case "2" -> spacePressed = value == 1.0f;
-                case "3" -> pausePressed = value == 1.0f;
-                case "4" -> characterPressed = value == 1.0f;
-                case "5" -> mapPressed = value == 1.0f;
-                case "7" -> escapePressed = value == 1.0f;
-            }
-        }
-    }
-
-    private void resetInputs() {
-        upPressed = downPressed = leftPressed = rightPressed = false;
-        enterPressed = interactPressed = shotPressed = spacePressed = false;
-        pausePressed = characterPressed = mapPressed = escapePressed = false;
+        // no-op: controller support disabled (missing JInput dependency)
     }
 
     @Override
-    public boolean isUpPressed() { return upPressed; }
+    public boolean isUpPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isDownPressed() { return downPressed; }
+    public boolean isDownPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isLeftPressed() { return leftPressed; }
+    public boolean isLeftPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isRightPressed() { return rightPressed; }
+    public boolean isRightPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isEnterPressed() { return enterPressed; }
+    public boolean isEnterPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isInteractPressed() { return interactPressed; }
+    public boolean isInteractPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isShotPressed() { return shotPressed; }
+    public boolean isShotPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isAltShotPressed() { return altShotPressed; }
+    public boolean isAltShotPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isSpacePressed() { return spacePressed; }
+    public boolean isSpacePressed() {
+        return false;
+    }
+
     @Override
-    public boolean isPausePressed() { return pausePressed; }
+    public boolean isPausePressed() {
+        return false;
+    }
+
     @Override
-    public boolean isCharacterPressed() { return characterPressed; }
+    public boolean isCharacterPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isMapPressed() { return mapPressed; }
+    public boolean isMapPressed() {
+        return false;
+    }
+
     @Override
-    public boolean isEscapePressed() { return escapePressed; }
+    public boolean isEscapePressed() {
+        return false;
+    }
 }
-
