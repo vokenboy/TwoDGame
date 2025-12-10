@@ -1,36 +1,41 @@
 package org.example.main.net;
 
-import org.example.main.input.PlayerInput;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.example.main.input.PlayerInput;
 
 /**
  * Simple serializable message types used between host and clients.
  */
 public final class NetworkMessages {
+
     private NetworkMessages() {}
 
     public static class Handshake implements Serializable {
+
         public int playerId;
         public String assignedName;
     }
 
     public static class InputMessage implements Serializable {
+
         public int playerId;
         public PlayerInput.SimpleInputState input;
     }
 
     public static class WorldState implements Serializable {
+
         public long tick;
         public List<PlayerState> players = new ArrayList<>();
+        public List<EntityState> npcs = new ArrayList<>();
         public List<EntityState> monsters = new ArrayList<>();
         public List<EntityState> projectiles = new ArrayList<>();
         public List<EntityState> objects = new ArrayList<>();
     }
 
     public static class PlayerState implements Serializable {
+
         public int playerId;
         public String name;
         public int worldX;
@@ -45,9 +50,10 @@ public final class NetworkMessages {
     }
 
     /**
-        * Shared snapshot for monsters, projectiles, and objects.
-        */
+     * Shared snapshot for monsters, projectiles, and objects.
+     */
     public static class EntityState implements Serializable {
+
         public int mapIndex;
         public int slotIndex;
         public String name;

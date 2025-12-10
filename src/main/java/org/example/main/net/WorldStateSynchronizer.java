@@ -34,6 +34,18 @@ public final class WorldStateSynchronizer {
             ws.players.add(ps);
         }
 
+        // NPCs
+        for (int map = 0; map < gp.maxMap; map++) {
+            for (int i = 0; i < gp.npc[map].length; i++) {
+                Entity e = gp.npc[map][i];
+                if (e != null) {
+                    ws.npcs.add(toEntityState(map, i, e));
+                } else {
+                    ws.npcs.add(emptyState(map, i));
+                }
+            }
+        }
+
         // Monsters
         for (int map = 0; map < gp.maxMap; map++) {
             for (int i = 0; i < gp.monster[map].length; i++) {
@@ -121,6 +133,9 @@ public final class WorldStateSynchronizer {
             p.spriteNum = ps.spriteNum;
             p.alive = ps.alive;
         }
+
+        // NPCs
+        syncEntityList(ws.npcs, gp.npc);
 
         // Monsters
         syncEntityList(ws.monsters, gp.monster);
