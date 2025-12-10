@@ -65,5 +65,7 @@ public final class NetworkMessages {
         public boolean alive;
         public boolean dying;
         public int spriteNum;
+        public boolean hpBarOn;
+        public int hpBarCounter;
     }
 }

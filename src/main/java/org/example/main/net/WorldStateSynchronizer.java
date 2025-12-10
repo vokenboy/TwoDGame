@@ -1,5 +1,7 @@
 package org.example.main.net;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.example.entity.Entity;
 import org.example.entity.Player;
 import org.example.main.GamePanel;
@@ -102,6 +104,8 @@ public final class WorldStateSynchronizer {
         es.alive = e.alive;
         es.dying = e.dying;
         es.spriteNum = e.spriteNum;
+        es.hpBarOn = e.hpBarOn;
+        es.hpBarCounter = e.hpBarCounter;
         return es;
     }
 
@@ -170,6 +174,8 @@ public final class WorldStateSynchronizer {
                 e.alive = es.alive;
                 e.dying = es.dying;
                 e.spriteNum = es.spriteNum;
+                e.hpBarOn = es.hpBarOn;
+                e.hpBarCounter = es.hpBarCounter;
             }
         }
     }
@@ -202,6 +208,8 @@ public final class WorldStateSynchronizer {
             e.alive = es.alive;
             e.dying = es.dying;
             e.spriteNum = es.spriteNum;
+            e.hpBarOn = es.hpBarOn;
+            e.hpBarCounter = es.hpBarCounter;
         }
     }
 }

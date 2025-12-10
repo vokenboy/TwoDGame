@@ -290,6 +290,13 @@ public class GamePanel extends JPanel implements Runnable {
             while (it.hasNext()) {
                 Entity m = it.next();
 
+                if (m == null) continue;
+
+                m.tickHudTimers();
+                if (m.dying) {
+                    m.progressDying();
+                }
+
                 if (m.alive && !m.dying) {
                     m.update();
                 } else if (!m.alive) {

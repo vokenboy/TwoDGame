@@ -1281,14 +1281,6 @@ public class UI {
                         (int) hpBarValue,
                         10
                     );
-
-                    monster.hpBarCounter++;
-                    if (
-                        monster.hpBarCounter > 600 // 10
-                    ) {
-                        monster.hpBarCounter = 0;
-                        monster.hpBarOn = false;
-                    }
                 } else if (monster.boss == true) {
                     double oneScale =
                         ((double) gp.tileSize * 8) / monster.maxLife; // (bar lenght / maxlife) Ex: if monster hp = 2, tilesize = 48px. So, 1 hp = 24px

@@ -59,6 +59,9 @@ public class Entity {
     int knockBackCounter = 0;
     public int guardCounter = 0;
     int offBalanceCounter = 0;
+    private static final int DYING_ANIMATION_INTERVAL = 5;
+    private static final int DYING_ANIMATION_STEPS =
+        DYING_ANIMATION_INTERVAL * 8;
 
     //CHARACTER ATTRIBUTES
     public String name;
@@ -494,6 +497,25 @@ public class Entity {
         }
     }
 
+    public void tickHudTimers() {
+        if (hpBarOn) {
+            hpBarCounter++;
+            if (hpBarCounter > 600) {
+                hpBarCounter = 0;
+                hpBarOn = false;
+            }
+        }
+    }
+
+    public void progressDying() {
+        if (dying) {
+            dyingCounter++;
+            if (dyingCounter > DYING_ANIMATION_STEPS) {
+                alive = false;
+            }
+        }
+    }
+
     public void checkAttackOrNot(int rate, int straight, int horizontal) {
         boolean tartgetInRange = false;
         Player targetPlayer = getClosestPlayer();
@@ -854,6 +876,10 @@ public class Entity {
                 Math.max(1, damage),
                 false
             );
+            if (type == type_monster) {
+                hpBarOn = true;
+                hpBarCounter = 0;
+            }
             life -= damage;
             invincible = true;
 
@@ -1012,8 +1038,7 @@ public class Entity {
 
     // Every 5 frames switch alpha between 0 and 1
     public void dyingAnimation(Graphics2D g2) {
-        dyingCounter++;
-        int i = 5; //interval
+        int i = DYING_ANIMATION_INTERVAL; //interval
 
         if (dyingCounter <= i) {
             changeAlpha(g2, 0f);
@@ -1038,9 +1063,6 @@ public class Entity {
         }
         if (dyingCounter > i * 7 && dyingCounter <= i * 8) {
             changeAlpha(g2, 1f);
-        }
-        if (dyingCounter > i * 8) {
-            alive = false;
         }
     }
 
