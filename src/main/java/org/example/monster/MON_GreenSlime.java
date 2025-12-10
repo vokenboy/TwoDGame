@@ -36,19 +36,19 @@ public class MON_GreenSlime extends MON_Slime {
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 
-        getImage();
+        MonsterSpriteSet s = MonsterSpriteFactory.getGreenSlime(gp);
+        up1 = s.up1;
+        up2 = s.up2;
+        down1 = s.down1;
+        down2 = s.down2;
+        left1 = s.left1;
+        left2 = s.left2;
+        right1 = s.right1;
+        right2 = s.right2;
     }
 
     public void getImage()
     {
-        up1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        up2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
-        down1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        down2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
-        left1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        left2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
-        right1 = setup("/monster/greenslime_down_1",gp.tileSize,gp.tileSize);
-        right2 = setup("/monster/greenslime_down_2",gp.tileSize,gp.tileSize);
     }
 
     @Override
