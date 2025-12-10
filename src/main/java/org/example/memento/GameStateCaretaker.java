@@ -2,11 +2,9 @@ package org.example.memento;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+
 import org.example.data.SaveLoad;
 
-/**
- * Caretaker that keeps a history of mementos for undo/checkpoint flows.
- */
 public class GameStateCaretaker {
 
     private final SaveLoad saveLoad;
