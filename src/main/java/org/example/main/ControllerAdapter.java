@@ -4,6 +4,9 @@ import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
+/**
+ * JInput-backed controller adapter that exposes gamepad state through the Controls interface.
+ */
 public class ControllerAdapter implements Controls {
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
@@ -14,9 +17,7 @@ public class ControllerAdapter implements Controls {
     private static final float DEADZONE = 0.3f;
 
     public ControllerAdapter() {
-        Controller[] controllers = ControllerEnvironment
-                .getDefaultEnvironment()
-                .getControllers();
+        Controller[] controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
 
         for (Controller c : controllers) {
             String name = c.getName().toLowerCase();
@@ -66,6 +67,15 @@ public class ControllerAdapter implements Controls {
                     else if (value == 0.75f) downPressed = true;
                     else if (value == 1.0f) leftPressed = true;
                 }
+                case "rz" -> { // right trigger
+                    if (value > DEADZONE) shotPressed = true;
+                }
+                case "z" -> { // left trigger
+                    if (value > DEADZONE) {
+                        altShotPressed = true;
+                        spacePressed = true;
+                    }
+                }
             }
 
             switch (id) {
@@ -74,49 +84,37 @@ public class ControllerAdapter implements Controls {
                     interactPressed = value == 1.0f;
                 }
                 case "1" -> shotPressed = value == 1.0f;
-                case "2" -> spacePressed = value == 1.0f;
-                case "3" -> pausePressed = value == 1.0f;
+                case "2" -> altShotPressed = value == 1.0f;
+                case "3" -> spacePressed = value == 1.0f;
                 case "4" -> characterPressed = value == 1.0f;
                 case "5" -> mapPressed = value == 1.0f;
                 case "6" -> achievementsPressed = value == 1.0f;
-                case "7" -> escapePressed = value == 1.0f;
+                case "7" -> {
+                    pausePressed = value == 1.0f;
+                    escapePressed = value == 1.0f;
+                }
             }
         }
     }
 
     private void resetInputs() {
         upPressed = downPressed = leftPressed = rightPressed = false;
-        enterPressed = interactPressed = shotPressed = spacePressed = false;
+        enterPressed = interactPressed = shotPressed = altShotPressed = spacePressed = false;
         pausePressed = characterPressed = mapPressed = escapePressed = achievementsPressed = false;
     }
 
-    @Override
-    public boolean isUpPressed() { return upPressed; }
-    @Override
-    public boolean isDownPressed() { return downPressed; }
-    @Override
-    public boolean isLeftPressed() { return leftPressed; }
-    @Override
-    public boolean isRightPressed() { return rightPressed; }
-    @Override
-    public boolean isEnterPressed() { return enterPressed; }
-    @Override
-    public boolean isInteractPressed() { return interactPressed; }
-    @Override
-    public boolean isShotPressed() { return shotPressed; }
-    @Override
-    public boolean isAltShotPressed() { return altShotPressed; }
-    @Override
-    public boolean isSpacePressed() { return spacePressed; }
-    @Override
-    public boolean isPausePressed() { return pausePressed; }
-    @Override
-    public boolean isCharacterPressed() { return characterPressed; }
-    @Override
-    public boolean isMapPressed() { return mapPressed; }
-    @Override
-    public boolean isEscapePressed() { return escapePressed; }
-    @Override
-    public boolean isAchievementsPressed() { return achievementsPressed; }
+    @Override public boolean isUpPressed() { return upPressed; }
+    @Override public boolean isDownPressed() { return downPressed; }
+    @Override public boolean isLeftPressed() { return leftPressed; }
+    @Override public boolean isRightPressed() { return rightPressed; }
+    @Override public boolean isEnterPressed() { return enterPressed; }
+    @Override public boolean isInteractPressed() { return interactPressed; }
+    @Override public boolean isShotPressed() { return shotPressed; }
+    @Override public boolean isAltShotPressed() { return altShotPressed; }
+    @Override public boolean isSpacePressed() { return spacePressed; }
+    @Override public boolean isPausePressed() { return pausePressed; }
+    @Override public boolean isCharacterPressed() { return characterPressed; }
+    @Override public boolean isMapPressed() { return mapPressed; }
+    @Override public boolean isEscapePressed() { return escapePressed; }
+    @Override public boolean isAchievementsPressed() { return achievementsPressed; }
 }
-
