@@ -388,7 +388,11 @@ public class KeyHandler extends KeyAdapter {
             switch (gp.ui.commandNum) {
                 case 0 -> {
                     gp.gameState = gp.playState;
-                    gp.resetGame(false);
+                    // Try to undo to the last checkpoint; fall back to a soft reset if none.
+                    boolean restored = gp.caretaker.undo();
+                    if (!restored) {
+                        gp.resetGame(false);
+                    }
                     gp.gameFacade.playBackgroundMusic(0);
                 }
                 case 1 -> {

@@ -22,6 +22,7 @@ import org.example.main.net.WorldStateSynchronizer;
 import org.example.main.sound.RealSound;
 import org.example.main.sound.SoundInterface;
 import org.example.main.sound.SoundProxy;
+import org.example.memento.GameStateCaretaker;
 import org.example.tile.Map;
 import org.example.tile.TileManager;
 import org.example.tile_interactive.InteractiveTile;
@@ -72,6 +73,7 @@ public class GamePanel extends JPanel implements Runnable {
     EnvironmentManager eManager = new EnvironmentManager(this);
     Map map = new Map(this);
     SaveLoad saveLoad = new SaveLoad(this);
+    public GameStateCaretaker caretaker = new GameStateCaretaker(saveLoad);
     public EntityGenerator eGenerator = new EntityGenerator(this);
     public CutsceneManager csManager = new CutsceneManager(this);
     Thread gameThread;
@@ -114,6 +116,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     //OTHERS
     public boolean bossBattleOn = false;
+    private int lastCheckpointMap = -1;
 
     //AREA
     public int currentArea;
@@ -172,12 +175,16 @@ public class GamePanel extends JPanel implements Runnable {
         if (fullScreenOn == true) {
             setFullScreen();
         }
+
+        onMapEntered(); // initial checkpoint at game start
     }
 
     public void resetGame(boolean restart) {
         gameFacade.stopBackgroundMusic();
         gameFacade.resetAudioState();
         currentArea = outside;
+        lastCheckpointMap = -1;
+        caretaker.clear();
         removeTempEntity();
         bossBattleOn = false;
         player.setDefaultPositions();
@@ -193,6 +200,19 @@ public class GamePanel extends JPanel implements Runnable {
             eManager.lighting.resetDay();
             gameFacade.stopBackgroundMusic();
             gameFacade.resetAudioState();
+        }
+
+        onMapEntered(); // reset sets a fresh checkpoint for the starting map
+    }
+
+    public void checkpointCurrentMap() {
+        caretaker.checkpoint();
+        lastCheckpointMap = currentMap;
+    }
+
+    public void onMapEntered() {
+        if (lastCheckpointMap != currentMap) {
+            checkpointCurrentMap();
         }
     }
 
@@ -724,7 +744,8 @@ public class GamePanel extends JPanel implements Runnable {
     }*/
 
     public void changeArea() {
-        if (nextArea != currentArea) {
+        boolean enteringNewArea = nextArea != currentArea;
+        if (enteringNewArea) {
             gameFacade.stopBackgroundMusic();
 
             if (nextArea == outside) {
@@ -741,6 +762,8 @@ public class GamePanel extends JPanel implements Runnable {
 
         currentArea = nextArea;
         aSetter.setMonster();
+
+        onMapEntered();
     }
 
     public void removeTempEntity() {
