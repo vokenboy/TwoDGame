@@ -1,11 +1,10 @@
 package org.example.monster;
 
+import java.util.List;
 import org.example.main.GamePanel;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
-
-import java.util.Random;
 
 public class MON_GreenBat extends MON_Bat {
 
@@ -54,19 +53,28 @@ public class MON_GreenBat extends MON_Bat {
     public void setAction() {
         if (onPath) {
             checkStopChasingOrNot(gp.player, 15, 100);
-            if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
-                setMovementStrategy(new org.example.entity.PathfindingStrategy());
+            if (
+                !(getMovementStrategy() instanceof
+                        org.example.entity.PathfindingStrategy)
+            ) {
+                setMovementStrategy(
+                    new org.example.entity.PathfindingStrategy()
+                );
             }
         } else {
             checkStartChasingOrNot(gp.player, 5, 100);
-            if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
-                setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
+            if (
+                !(getMovementStrategy() instanceof
+                        org.example.entity.RandomMovementStrategy)
+            ) {
+                setMovementStrategy(
+                    new org.example.entity.RandomMovementStrategy(120)
+                );
             }
         }
 
         performMove();
     }
-
 
     @Override
     public void damageReaction() {
@@ -74,15 +82,16 @@ public class MON_GreenBat extends MON_Bat {
     }
 
     @Override
-    public void checkDrop() {
-        int i = new Random().nextInt(100) + 1;
-        if (i < 50) dropItem(new OBJ_Coin_Bronze(gp));
-        else if (i < 80) dropItem(new OBJ_Heart(gp));
-        else dropItem(new OBJ_ManaCrystal(gp));
+    public void setDialogue() {
+        // No dialogue yet
     }
 
     @Override
-    public void setDialogue() {
-        // No dialogue yet
+    protected List<DropEntry> dropTable() {
+        return List.of(
+            DropEntry.of(49, () -> new OBJ_Coin_Bronze(gp)),
+            DropEntry.of(79, () -> new OBJ_Heart(gp)),
+            DropEntry.of(100, () -> new OBJ_ManaCrystal(gp))
+        );
     }
 }
