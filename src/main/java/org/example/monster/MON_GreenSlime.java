@@ -1,22 +1,18 @@
 package org.example.monster;
 
+import java.util.List;
 import org.example.entity.Entity;
+import org.example.entity.MovementStrategy;
 import org.example.main.GamePanel;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
 import org.example.object.OBJ_Rock;
-import org.example.entity.MovementStrategy;
-import java.util.Random;
 
 public class MON_GreenSlime extends MON_Slime {
 
-    GamePanel gp; // cuz of different package
     public MON_GreenSlime(GamePanel gp) {
         super(gp);
-
-        this.gp = gp;
-
         type = type_monster;
         name = "Green Slime";
         defaultSpeed = 1;
@@ -27,7 +23,6 @@ public class MON_GreenSlime extends MON_Slime {
         defense = 0;
         exp = 2;
         //projectile = new OBJ_Rock(gp);
-
 
         solidArea.x = 3;
         solidArea.y = 18;
@@ -47,25 +42,31 @@ public class MON_GreenSlime extends MON_Slime {
         right2 = s.right2;
     }
 
-    public void getImage()
-    {
-    }
+    public void getImage() {}
 
     @Override
-    public void getAttackImage() {
-
-    }
+    public void getAttackImage() {}
 
     public void setAction() {
         if (onPath) {
             checkStopChasingOrNot(gp.player, 15, 100);
-            if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
-                setMovementStrategy(new org.example.entity.PathfindingStrategy());
+            if (
+                !(getMovementStrategy() instanceof
+                        org.example.entity.PathfindingStrategy)
+            ) {
+                setMovementStrategy(
+                    new org.example.entity.PathfindingStrategy()
+                );
             }
         } else {
             checkStartChasingOrNot(gp.player, 5, 100);
-            if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
-                setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
+            if (
+                !(getMovementStrategy() instanceof
+                        org.example.entity.RandomMovementStrategy)
+            ) {
+                setMovementStrategy(
+                    new org.example.entity.RandomMovementStrategy(120)
+                );
             }
         }
 
@@ -77,28 +78,16 @@ public class MON_GreenSlime extends MON_Slime {
         //direction = gp.player.direction;
         onPath = true; // gets aggro
     }
-    public void checkDrop()
-    {
-        //CAST A DIE
-        int i = new Random().nextInt(100)+1;
 
-        //SET THE MONSTER DROP
-        if(i < 50)
-        {
-            dropItem(new OBJ_Coin_Bronze(gp));
-        }
-        if(i >= 50 && i < 75)
-        {
-            dropItem(new OBJ_Heart(gp));
-        }
-        if(i >= 75 && i < 100)
-        {
-            dropItem(new OBJ_ManaCrystal(gp));
-        }
+    @Override
+    protected List<DropEntry> dropTable() {
+        return List.of(
+            DropEntry.of(49, () -> new OBJ_Coin_Bronze(gp)),
+            DropEntry.of(74, () -> new OBJ_Heart(gp)),
+            DropEntry.of(99, () -> new OBJ_ManaCrystal(gp))
+        );
     }
 
     @Override
-    public void setDialogue() {
-
-    }
+    public void setDialogue() {}
 }
