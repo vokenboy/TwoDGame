@@ -17,12 +17,12 @@ public class ChopVisitor implements TileVisitor {
 
     @Override
     public void visit(IT_DryTree tile) {
-        chipWood(tile, 2, 2);
+        chip(tile, 2, 2);
     }
 
     @Override
     public void visit(IT_DestructibleWall tile) {
-        chipWood(tile, 1, 0);
+        chip(tile, 1, 0);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class ChopVisitor implements TileVisitor {
     public void visit(IT_Default tile) {
     }
 
-    private void chipWood(InteractiveTile tile, int damage, int extraParticles) {
+    private void chip(InteractiveTile tile, int damage, int extraParticles) {
         if (damage <= 0) return;
         if (tile.destructible && tile.isCorrectItem(player) && !tile.invincible) {
             tile.playSE();
