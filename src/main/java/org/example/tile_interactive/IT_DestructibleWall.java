@@ -1,10 +1,10 @@
 package org.example.tile_interactive;
 
+import java.awt.Color;
+
 import org.example.entity.Entity;
 import org.example.main.GamePanel;
 import org.example.visitor.TileVisitor;
-
-import java.awt.*;
 
 public final class IT_DestructibleWall extends InteractiveTile {
 
@@ -25,7 +25,7 @@ public final class IT_DestructibleWall extends InteractiveTile {
 
     @Override
     public boolean isCorrectItem(Entity entity) {
-        return entity.currentWeapon.type == type_pickaxe;
+        return entity.currentWeapon.type == type_axe || entity.currentWeapon.type == type_pickaxe;
     }
 
     @Override

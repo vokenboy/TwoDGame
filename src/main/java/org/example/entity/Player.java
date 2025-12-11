@@ -15,7 +15,6 @@ import org.example.main.KeyHandler;
 import org.example.main.PlayerObserver;
 import org.example.main.input.PlayerInput;
 import org.example.object.*;
-import org.example.object.*;
 import org.example.tile_interactive.InteractiveTile;
 import org.example.visitor.ChopVisitor;
 import org.example.visitor.SmashVisitor;
@@ -184,13 +183,8 @@ public class Player extends Entity {
         inventory.clear(); //cuz if game restarts inventory must be cleared first
         inventory.add(currentWeapon);
         inventory.add(currentShield);
-        /*inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Key(gp));
-        inventory.add(new OBJ_Key(gp));
-
-        inventory.add(new OBJ_Lantern(gp));
         inventory.add(new OBJ_Axe(gp));
-        inventory.add(new OBJ_Pickaxe(gp));*/
+        inventory.add(new OBJ_Pickaxe(gp));
     }
 
     public int getAttack() {

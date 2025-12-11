@@ -16,11 +16,13 @@ public class SmashVisitor implements TileVisitor {
     }
 
     @Override
-    public void visit(IT_DryTree tile) {}
+    public void visit(IT_DryTree tile) {
+        crush(tile, 1, 2);
+    }
 
     @Override
     public void visit(IT_DestructibleWall tile) {
-        damage(tile);
+        crush(tile, 2, 2);
     }
 
     @Override
@@ -32,12 +34,16 @@ public class SmashVisitor implements TileVisitor {
     @Override
     public void visit(IT_Default tile) {}
 
-    private void damage(InteractiveTile tile) {
+    private void crush(InteractiveTile tile, int damage, int extraParticles) {
+        if (damage <= 0) return;
         if (tile.destructible && tile.isCorrectItem(player) && !tile.invincible) {
             tile.playSE();
-            tile.life--;
+            tile.life -= Math.max(1, damage);
             tile.invincible = true;
             player.generateParticle(tile, tile);
+            for (int i = 0; i < extraParticles; i++) {
+                player.generateParticle(tile, tile);
+            }
         }
     }
 }
