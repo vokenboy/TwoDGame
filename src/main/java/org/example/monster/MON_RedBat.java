@@ -1,21 +1,16 @@
 package org.example.monster;
 
+import java.util.List;
 import org.example.main.GamePanel;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
 import org.example.object.OBJ_ManaCrystal;
 import org.example.object.OBJ_Rock;
 
-import java.util.Random;
-
 public class MON_RedBat extends MON_Bat {
-
-    GamePanel gp;
 
     public MON_RedBat(GamePanel gp) {
         super(gp);
-        this.gp = gp;
-
         name = "Red Bat";
         defaultSpeed = 5;
         speed = defaultSpeed;
@@ -45,8 +40,7 @@ public class MON_RedBat extends MON_Bat {
     }
 
     @Override
-    public void getImage() {
-    }
+    public void getImage() {}
 
     @Override
     public void getAttackImage() {
@@ -56,19 +50,28 @@ public class MON_RedBat extends MON_Bat {
     public void setAction() {
         if (onPath) {
             checkStopChasingOrNot(gp.player, 15, 100);
-            if (!(getMovementStrategy() instanceof org.example.entity.PathfindingStrategy)) {
-                setMovementStrategy(new org.example.entity.PathfindingStrategy());
+            if (
+                !(getMovementStrategy() instanceof
+                        org.example.entity.PathfindingStrategy)
+            ) {
+                setMovementStrategy(
+                    new org.example.entity.PathfindingStrategy()
+                );
             }
         } else {
             checkStartChasingOrNot(gp.player, 5, 100);
-            if (!(getMovementStrategy() instanceof org.example.entity.RandomMovementStrategy)) {
-                setMovementStrategy(new org.example.entity.RandomMovementStrategy(120));
+            if (
+                !(getMovementStrategy() instanceof
+                        org.example.entity.RandomMovementStrategy)
+            ) {
+                setMovementStrategy(
+                    new org.example.entity.RandomMovementStrategy(120)
+                );
             }
         }
 
         performMove();
     }
-
 
     @Override
     public void damageReaction() {
@@ -76,11 +79,12 @@ public class MON_RedBat extends MON_Bat {
     }
 
     @Override
-    public void checkDrop() {
-        int i = new Random().nextInt(100) + 1;
-        if (i < 40) dropItem(new OBJ_Coin_Bronze(gp));
-        else if (i < 70) dropItem(new OBJ_Heart(gp));
-        else dropItem(new OBJ_ManaCrystal(gp));
+    protected List<DropEntry> dropTable() {
+        return List.of(
+            DropEntry.of(39, () -> new OBJ_Coin_Bronze(gp)),
+            DropEntry.of(69, () -> new OBJ_Heart(gp)),
+            DropEntry.of(100, () -> new OBJ_ManaCrystal(gp))
+        );
     }
 
     @Override
