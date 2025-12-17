@@ -28,6 +28,22 @@ public class SaveLoad {
         applySnapshot(memento.getSnapshot());
     }
 
+    public String describeMemento(GameStateMemento memento) {
+        if (memento == null || memento.getSnapshot() == null) {
+            return "Unknown snapshot";
+        }
+        DataStorage ds = memento.getSnapshot();
+        String areaLabel = areaName(ds.currentArea);
+        return String.format(
+            "%s | Map %d | Lv %d HP %d/%d",
+            areaLabel,
+            ds.currentMap,
+            ds.level,
+            ds.life,
+            ds.maxLife
+        );
+    }
+
     public void save() {
         try (
             ObjectOutputStream oos = new ObjectOutputStream(
@@ -85,6 +101,7 @@ public class SaveLoad {
         //PLAYER EQUIPMENT
         ds.currentWeaponSlot = gp.player.getCurrentWeaponSlot();
         ds.currentShieldSlot = gp.player.getCurrentShieldSlot();
+        ds.currentLightSlot = gp.player.getCurrentLightSlot();
 
         //OBJECTS ON MAP
         ds.mapObjectNames = new String[gp.maxMap][gp.obj[1].length]; //2nd dimension of obj array
@@ -92,6 +109,17 @@ public class SaveLoad {
         ds.mapObjectWorldY = new int[gp.maxMap][gp.obj[1].length];
         ds.mapObjectLootNames = new String[gp.maxMap][gp.obj[1].length];
         ds.mapObjectOpened = new boolean[gp.maxMap][gp.obj[1].length];
+
+        ds.npcPresent = new boolean[gp.maxMap][gp.npc[1].length];
+        ds.npcWorldX = new int[gp.maxMap][gp.npc[1].length];
+        ds.npcWorldY = new int[gp.maxMap][gp.npc[1].length];
+        ds.npcDirection = new String[gp.maxMap][gp.npc[1].length];
+
+        ds.monsterPresent = new boolean[gp.maxMap][gp.monster[1].length];
+        ds.monsterWorldX = new int[gp.maxMap][gp.monster[1].length];
+        ds.monsterWorldY = new int[gp.maxMap][gp.monster[1].length];
+        ds.monsterLife = new int[gp.maxMap][gp.monster[1].length];
+        ds.monsterDirection = new String[gp.maxMap][gp.monster[1].length];
 
         for (int mapNum = 0; mapNum < gp.maxMap; mapNum++) {
             for (int i = 0; i < gp.obj[1].length; i++) {
@@ -109,7 +137,61 @@ public class SaveLoad {
             }
         }
 
+        // NPCs
+        for (int mapNum = 0; mapNum < gp.maxMap; mapNum++) {
+            for (int i = 0; i < gp.npc[1].length; i++) {
+                if (gp.npc[mapNum][i] != null && gp.npc[mapNum][i].alive) {
+                    ds.npcPresent[mapNum][i] = true;
+                    ds.npcWorldX[mapNum][i] = gp.npc[mapNum][i].worldX;
+                    ds.npcWorldY[mapNum][i] = gp.npc[mapNum][i].worldY;
+                    ds.npcDirection[mapNum][i] = gp.npc[mapNum][i].direction;
+                } else {
+                    ds.npcPresent[mapNum][i] = false;
+                }
+            }
+        }
+
+        // Monsters
+        for (int mapNum = 0; mapNum < gp.maxMap; mapNum++) {
+            for (int i = 0; i < gp.monster[1].length; i++) {
+                if (
+                    gp.monster[mapNum][i] != null &&
+                    gp.monster[mapNum][i].alive
+                ) {
+                    ds.monsterPresent[mapNum][i] = true;
+                    ds.monsterWorldX[mapNum][i] = gp.monster[mapNum][i].worldX;
+                    ds.monsterWorldY[mapNum][i] = gp.monster[mapNum][i].worldY;
+                    ds.monsterLife[mapNum][i] = gp.monster[mapNum][i].life;
+                    ds.monsterDirection[mapNum][i] =
+                        gp.monster[mapNum][i].direction;
+                } else {
+                    ds.monsterPresent[mapNum][i] = false;
+                }
+            }
+        }
+
+        // ENVIRONMENT
+        var env = gp.getEnvironmentManager();
+        if (env != null && env.lighting != null) {
+            ds.dayState = env.lighting.dayState;
+            ds.dayCounter = env.lighting.dayCounter;
+            ds.filterAlpha = env.lighting.filterAlpha;
+        }
+
         return ds;
+    }
+
+    private String areaName(int currentArea) {
+        if (currentArea == gp.outside) {
+            return "Outside";
+        }
+        if (currentArea == gp.indoor) {
+            return "Indoor";
+        }
+        if (currentArea == gp.dungeon) {
+            return "Dungeon";
+        }
+        return "Area " + currentArea;
     }
 
     private void applySnapshot(DataStorage ds) {
@@ -147,6 +229,19 @@ public class SaveLoad {
         gp.player.getAttack();
         gp.player.getDefense();
         gp.player.getAttackImage();
+        if (
+            ds.currentLightSlot >= 0 &&
+            ds.currentLightSlot < gp.player.inventory.size()
+        ) {
+            gp.player.currentLight = gp.player.inventory.get(ds.currentLightSlot);
+            gp.player.lightUpdated = true;
+        } else {
+            gp.player.currentLight = null;
+        }
+
+        // Reset NPCs/Monsters to a known state before applying snapshot data.
+        gp.aSetter.setNPC();
+        gp.aSetter.setMonster();
 
         //OBJECTS ON MAP
         for (int mapNum = 0; mapNum < gp.maxMap; mapNum++) {
@@ -169,6 +264,75 @@ public class SaveLoad {
                     gp.obj[mapNum][i].setDialogue(); // added this line
                 }
             }
+        }
+
+        // NPCs
+        if (ds.npcPresent != null) {
+            for (int mapNum = 0; mapNum < gp.maxMap; mapNum++) {
+                int npcSlots = Math.min(
+                    gp.npc[mapNum].length,
+                    ds.npcPresent.length > mapNum
+                        ? ds.npcPresent[mapNum].length
+                        : 0
+                );
+                for (int i = 0; i < npcSlots; i++) {
+                    boolean present = ds.npcPresent[mapNum][i];
+                    if (!present) {
+                        gp.npc[mapNum][i] = null;
+                        continue;
+                    }
+                    if (gp.npc[mapNum][i] != null) {
+                        gp.npc[mapNum][i].worldX = ds.npcWorldX[mapNum][i];
+                        gp.npc[mapNum][i].worldY = ds.npcWorldY[mapNum][i];
+                        if (ds.npcDirection[mapNum][i] != null) {
+                            gp.npc[mapNum][i].direction =
+                                ds.npcDirection[mapNum][i];
+                        }
+                        gp.npc[mapNum][i].alive = true;
+                        gp.npc[mapNum][i].sleep = false;
+                    }
+                }
+            }
+        }
+
+        // Monsters
+        if (ds.monsterPresent != null) {
+            for (int mapNum = 0; mapNum < gp.maxMap; mapNum++) {
+                int monsterSlots = Math.min(
+                    gp.monster[mapNum].length,
+                    ds.monsterPresent.length > mapNum
+                        ? ds.monsterPresent[mapNum].length
+                        : 0
+                );
+                for (int i = 0; i < monsterSlots; i++) {
+                    boolean present = ds.monsterPresent[mapNum][i];
+                    if (!present) {
+                        gp.monster[mapNum][i] = null;
+                        continue;
+                    }
+                    if (gp.monster[mapNum][i] != null) {
+                        gp.monster[mapNum][i].worldX = ds.monsterWorldX[mapNum][i];
+                        gp.monster[mapNum][i].worldY = ds.monsterWorldY[mapNum][i];
+                        gp.monster[mapNum][i].life = ds.monsterLife[mapNum][i];
+                        if (ds.monsterDirection[mapNum][i] != null) {
+                            gp.monster[mapNum][i].direction =
+                                ds.monsterDirection[mapNum][i];
+                        }
+                        gp.monster[mapNum][i].alive = true;
+                        gp.monster[mapNum][i].dying = false;
+                        gp.monster[mapNum][i].sleep = false;
+                    }
+                }
+            }
+        }
+
+        // ENVIRONMENT
+        var env = gp.getEnvironmentManager();
+        if (env != null && env.lighting != null) {
+            env.lighting.dayState = ds.dayState;
+            env.lighting.dayCounter = ds.dayCounter;
+            env.lighting.filterAlpha = ds.filterAlpha;
+            env.lighting.setLightSource();
         }
     }
 }

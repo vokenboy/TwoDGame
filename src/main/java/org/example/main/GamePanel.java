@@ -220,6 +220,10 @@ public class GamePanel extends JPanel implements Runnable {
         lastCheckpointMap = currentMap;
     }
 
+    public EnvironmentManager getEnvironmentManager() {
+        return eManager;
+    }
+
     public void onMapEntered() {
         if (lastCheckpointMap != currentMap) {
             checkpointCurrentMap();

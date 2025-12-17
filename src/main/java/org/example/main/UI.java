@@ -16,6 +16,7 @@ import org.example.entity.decorator.ElementalDecorator;
 import org.example.entity.decorator.ElementalDecorator;
 import org.example.entity.decorator.EquipmentBuilder;
 import org.example.entity.decorator.EquipmentBuilder;
+import org.example.memento.GameStateMemento;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Coin_Bronze;
 import org.example.object.OBJ_Heart;
@@ -44,6 +45,9 @@ public class UI {
     public int npcSlotRow = 0;
 
     int subState = 0;
+    private static final int LOAD_VISIBLE_ROWS = 6;
+    int loadSelectionIndex = 0;
+    int loadScrollOffset = 0;
     int counter = 0; // transition
     public Entity npc;
     int charIndex = 0;
@@ -1582,8 +1586,54 @@ public class UI {
                 break;
             case 3:
                 options_endGameConfirmation(frameX, frameY);
+                break;
+            case 4:
+                options_loadGame(frameX, frameY);
         }
         gp.keyH.enterPressed = false;
+    }
+
+    public void openLoadMenu() {
+        subState = 4;
+        resetLoadMenuCursor();
+    }
+
+    public void resetLoadMenuCursor() {
+        loadSelectionIndex = 0;
+        loadScrollOffset = 0;
+    }
+
+    public void moveLoadSelection(int delta, int optionCount) {
+        if (optionCount <= 0) {
+            resetLoadMenuCursor();
+            return;
+        }
+        int maxIndex = optionCount - 1;
+        loadSelectionIndex += delta;
+        if (loadSelectionIndex < 0) {
+            loadSelectionIndex = maxIndex;
+        }
+        if (loadSelectionIndex > maxIndex) {
+            loadSelectionIndex = 0;
+        }
+        clampLoadScroll(optionCount);
+    }
+
+    private void clampLoadScroll(int optionCount) {
+        int maxOffset = Math.max(0, optionCount - LOAD_VISIBLE_ROWS);
+        if (loadSelectionIndex < loadScrollOffset) {
+            loadScrollOffset = loadSelectionIndex;
+        }
+        int lastVisible = loadScrollOffset + LOAD_VISIBLE_ROWS - 1;
+        if (loadSelectionIndex > lastVisible) {
+            loadScrollOffset = loadSelectionIndex - LOAD_VISIBLE_ROWS + 1;
+        }
+        if (loadScrollOffset > maxOffset) {
+            loadScrollOffset = maxOffset;
+        }
+        if (loadScrollOffset < 0) {
+            loadScrollOffset = 0;
+        }
     }
 
     public void options_top(int frameX, int frameY) {
@@ -1602,14 +1652,6 @@ public class UI {
         g2.drawString("Full Screen", textX, textY);
         if (commandNum == 0) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                if (gp.fullScreenOn == false) {
-                    gp.fullScreenOn = true;
-                } else if (gp.fullScreenOn == true) {
-                    gp.fullScreenOn = false;
-                }
-                subState = 1;
-            }
         }
 
         //MUSIC
@@ -1631,32 +1673,27 @@ public class UI {
         g2.drawString("Controls", textX, textY);
         if (commandNum == 3) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                subState = 2;
-                commandNum = 0;
-            }
+        }
+
+        //LOAD GAME
+        textY += gp.tileSize;
+        g2.drawString("Load Game", textX, textY);
+        if (commandNum == 4) {
+            g2.drawString(">", textX - 25, textY);
         }
 
         //END GAME
         textY += gp.tileSize;
         g2.drawString("End Game", textX, textY);
-        if (commandNum == 4) {
+        if (commandNum == 5) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                subState = 3;
-                commandNum = 0;
-            }
         }
 
         //BACK
         textY += gp.tileSize * 2;
         g2.drawString("Back", textX, textY);
-        if (commandNum == 5) {
+        if (commandNum == 6) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                gp.gameState = gp.playState;
-                commandNum = 0;
-            }
         }
 
         //FULL SCREEN CHECK BOX
@@ -1700,9 +1737,6 @@ public class UI {
         g2.drawString("Back", textX, textY);
         if (commandNum == 0) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                subState = 0;
-            }
         }
     }
 
@@ -1753,11 +1787,53 @@ public class UI {
         g2.drawString("Back", textX, textY);
         if (commandNum == 0) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                subState = 0;
-                commandNum = 3; //back to control row
-            }
         }
+    }
+
+    public void options_loadGame(int frameX, int frameY) {
+        int textX = frameX + gp.tileSize;
+        int textY = frameY + gp.tileSize;
+
+        String title = "Load Game";
+        g2.drawString(title, getXforCenteredText(title), textY);
+
+        List<GameStateMemento> history = gp.caretaker.getHistorySnapshot();
+        int optionCount = history.size() + 1; // +1 for Back
+        if (optionCount <= 0) {
+            optionCount = 1;
+        }
+        if (loadSelectionIndex >= optionCount) {
+            loadSelectionIndex = optionCount - 1;
+        }
+        clampLoadScroll(optionCount);
+
+        textY += gp.tileSize * 2;
+        if (history.isEmpty()) {
+            g2.drawString("No checkpoints captured yet.", textX, textY);
+            textY += gp.tileSize;
+        }
+
+        for (int row = 0; row < LOAD_VISIBLE_ROWS; row++) {
+            int idx = loadScrollOffset + row;
+            if (idx >= optionCount) {
+                break;
+            }
+            String label;
+            if (idx < history.size()) {
+                label = gp.saveLoad.describeMemento(history.get(idx));
+            } else {
+                label = "Back";
+            }
+            if (idx == loadSelectionIndex) {
+                g2.drawString(">", textX - 25, textY);
+            }
+            g2.drawString(label, textX, textY);
+            textY += gp.tileSize;
+        }
+
+        textY = frameY + gp.tileSize * 9;
+        g2.setFont(g2.getFont().deriveFont(24F));
+        g2.drawString("[ENTER] Load   [ESC] Back", textX, textY);
     }
 
     public void options_endGameConfirmation(int frameX, int frameY) {
@@ -1776,13 +1852,6 @@ public class UI {
         g2.drawString(text, textX, textY);
         if (commandNum == 0) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                subState = 0;
-                gp.ui.titleScreenState = 0;
-                gp.gameState = gp.titleState;
-                gp.resetGame(true);
-                gp.gameFacade.stopBackgroundMusic();
-            }
         }
 
         //NO
@@ -1792,10 +1861,6 @@ public class UI {
         g2.drawString(text, textX, textY);
         if (commandNum == 1) {
             g2.drawString(">", textX - 25, textY);
-            if (gp.keyH.enterPressed == true) {
-                subState = 0;
-                commandNum = 4; //back to end row
-            }
         }
     }
 

@@ -1,6 +1,7 @@
 package org.example.main;
 
 import java.awt.event.KeyAdapter;
+import java.util.List;
 import org.example.commands.AltCastSpellCommand;
 import org.example.commands.AttackCommand;
 import org.example.commands.CastSpellCommand;
@@ -9,6 +10,7 @@ import org.example.commands.MoveDownCommand;
 import org.example.commands.MoveLeftCommand;
 import org.example.commands.MoveRightCommand;
 import org.example.commands.MoveUpCommand;
+import org.example.memento.GameStateMemento;
 
 public class KeyHandler extends KeyAdapter {
 
@@ -36,6 +38,7 @@ public class KeyHandler extends KeyAdapter {
     private boolean prevChat;
     public boolean showDebugText = false;
     public boolean godModeOn = false;
+    private boolean suppressEnterUntilRelease = false;
 
     private final ChatInputSink chatSink = new ChatInputSink() {
         @Override
@@ -100,8 +103,13 @@ public class KeyHandler extends KeyAdapter {
             keyboard.isAchievementsPressed() ||
             controller.isAchievementsPressed();
         chatPressed = keyboard.isChatPressed() || controller.isChatPressed();
-        enterOnce = justPressed(enterPressed, prevEnter);
+        enterOnce =
+            !suppressEnterUntilRelease && justPressed(enterPressed, prevEnter);
         interactOnce = justPressed(interactPressed, prevInteract);
+
+        if (!enterPressed) {
+            suppressEnterUntilRelease = false;
+        }
 
         // Handle chat toggle at the input layer so it works for host and client paths.
         boolean chatToggle =
@@ -391,7 +399,7 @@ public class KeyHandler extends KeyAdapter {
     }
 
     private void handleOptionsInput() {
-        boolean enter = justPressed(enterPressed, prevEnter);
+        boolean enter = enterOnce;
         boolean up = justPressed(upPressed, prevUp);
         boolean down = justPressed(downPressed, prevDown);
         boolean escape = justPressed(
@@ -399,7 +407,37 @@ public class KeyHandler extends KeyAdapter {
             prevEscape
         );
 
-        int maxOptions = 5;
+        if (gp.ui.subState == 4) {
+            handleLoadMenuInput(enter, up, down, escape);
+            return;
+        }
+
+        if (gp.ui.subState == 3) {
+            handleEndGameConfirmationInput(enter, up, down, escape);
+            return;
+        }
+
+        if (gp.ui.subState == 2) {
+            if (enter || escape) {
+                gp.ui.subState = 0;
+                gp.ui.commandNum = 3;
+                gp.gameFacade.playSoundEffect(9);
+                consumeEnterInput();
+            }
+            return;
+        }
+
+        if (gp.ui.subState == 1) {
+            if (enter || escape) {
+                gp.ui.subState = 0;
+                gp.ui.commandNum = 0;
+                gp.gameFacade.playSoundEffect(9);
+                consumeEnterInput();
+            }
+            return;
+        }
+
+        int maxOptions = 6;
 
         if (up) {
             gp.ui.commandNum--;
@@ -414,26 +452,137 @@ public class KeyHandler extends KeyAdapter {
 
         int selected = gp.ui.commandNum;
 
-        if (enter && selected == 0) {
-            gp.fullScreenOn = !gp.fullScreenOn;
-            gp.config.saveConfig();
+        if (enter) {
+            switch (selected) {
+                case 0 -> {
+                    gp.fullScreenOn = !gp.fullScreenOn;
+                    gp.config.saveConfig();
+                    gp.ui.subState = 1;
+                }
+                case 3 -> {
+                    gp.ui.subState = 2;
+                    gp.ui.commandNum = 0;
+                }
+                case 4 -> gp.ui.openLoadMenu();
+                case 5 -> {
+                    gp.ui.subState = 3;
+                    gp.ui.commandNum = 0;
+                }
+                case 6 -> gp.gameState = gp.playState;
+                default -> {}
+            }
             gp.gameFacade.playSoundEffect(9);
+            consumeEnterInput();
         }
 
-        if (enter && selected == 3) {
-            gp.gameFacade.playSoundEffect(9);
-        }
-
-        if (enter && selected == 4) {
-            gp.gameState = gp.titleState;
-            gp.gameFacade.stopBackgroundMusic();
-            gp.gameFacade.playSoundEffect(9);
-        }
-
-        if ((enter && selected == 5) || escape) {
+        if (escape) {
             gp.gameState = gp.playState;
             gp.gameFacade.playSoundEffect(9);
         }
+    }
+
+    private void handleLoadMenuInput(
+        boolean enter,
+        boolean up,
+        boolean down,
+        boolean escape
+    ) {
+        List<GameStateMemento> history = gp.caretaker.getHistorySnapshot();
+        int optionCount = history.size() + 1; // +1 for Back
+        if (optionCount <= 0) {
+            optionCount = 1;
+        }
+
+        if (up) {
+            gp.ui.moveLoadSelection(-1, optionCount);
+            gp.gameFacade.playSoundEffect(9);
+        }
+        if (down) {
+            gp.ui.moveLoadSelection(1, optionCount);
+            gp.gameFacade.playSoundEffect(9);
+        }
+
+        boolean backSelected = gp.ui.loadSelectionIndex >= optionCount - 1;
+
+        if (enter) {
+            if (backSelected) {
+                gp.ui.subState = 0;
+                gp.ui.commandNum = 4;
+                gp.ui.resetLoadMenuCursor();
+                gp.gameFacade.playSoundEffect(9);
+                consumeEnterInput();
+                return;
+            }
+            boolean restored = gp.caretaker.restoreAtIndex(
+                gp.ui.loadSelectionIndex
+            );
+            if (restored) {
+                gp.gameState = gp.playState;
+                gp.ui.subState = 0;
+                gp.ui.commandNum = 0;
+                gp.gameFacade.playSoundEffect(0);
+            } else {
+                gp.gameFacade.playSoundEffect(9);
+            }
+            consumeEnterInput();
+        }
+
+        if (escape) {
+            gp.ui.subState = 0;
+            gp.ui.commandNum = 4;
+            gp.ui.resetLoadMenuCursor();
+            gp.gameFacade.playSoundEffect(9);
+        }
+    }
+
+    private void handleEndGameConfirmationInput(
+        boolean enter,
+        boolean up,
+        boolean down,
+        boolean escape
+    ) {
+        if (up) {
+            gp.ui.commandNum--;
+            if (gp.ui.commandNum < 0) {
+                gp.ui.commandNum = 1;
+            }
+            gp.gameFacade.playSoundEffect(9);
+        }
+        if (down) {
+            gp.ui.commandNum++;
+            if (gp.ui.commandNum > 1) {
+                gp.ui.commandNum = 0;
+            }
+            gp.gameFacade.playSoundEffect(9);
+        }
+
+        if (enter) {
+            if (gp.ui.commandNum == 0) {
+                gp.ui.subState = 0;
+                gp.ui.titleScreenState = 0;
+                gp.gameState = gp.titleState;
+                gp.resetGame(true);
+                gp.gameFacade.stopBackgroundMusic();
+            } else {
+                gp.ui.subState = 0;
+                gp.ui.commandNum = 5;
+            }
+            gp.gameFacade.playSoundEffect(9);
+            consumeEnterInput();
+            return;
+        }
+
+        if (escape) {
+            gp.ui.subState = 0;
+            gp.ui.commandNum = 5;
+            gp.gameFacade.playSoundEffect(9);
+        }
+    }
+
+    private void consumeEnterInput() {
+        enterPressed = false;
+        enterOnce = false;
+        suppressEnterUntilRelease = true;
     }
 
     private void handleGameOverInput() {

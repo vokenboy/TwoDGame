@@ -1083,6 +1083,13 @@ public class Player extends Entity {
         return itemIndex;
     }
 
+    public int getCurrentLightSlot() {
+        if (currentLight == null) {
+            return -1;
+        }
+        return inventory.indexOf(currentLight);
+    }
+
     public boolean canObtainItem(Entity item) {
         boolean canObtain = false;
 

@@ -29,6 +29,7 @@ public class DataStorage implements Serializable {
     ArrayList<Integer> itemAmounts = new ArrayList<>();
     int currentWeaponSlot;
     int currentShieldSlot;
+    int currentLightSlot;
 
     //OBJECT ON MAP
     String mapObjectNames[][];
@@ -37,5 +38,21 @@ public class DataStorage implements Serializable {
     String mapObjectLootNames[][];
     boolean mapObjectOpened[][];
 
-}
+    // ENVIRONMENT
+    int dayState;
+    int dayCounter;
+    float filterAlpha;
 
+    // NPCS
+    boolean npcPresent[][];
+    int npcWorldX[][];
+    int npcWorldY[][];
+    String npcDirection[][];
+
+    // MONSTERS
+    boolean monsterPresent[][];
+    int monsterWorldX[][];
+    int monsterWorldY[][];
+    int monsterLife[][];
+    String monsterDirection[][];
+}
