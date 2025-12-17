@@ -3,10 +3,16 @@ package org.example.entity;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
 import org.example.achievement.Achievement;
-import org.example.achievement.AchievementCatalog;
+import org.example.achievement.AchievementGroup;
 import org.example.achievement.MapKillTracker;
 import org.example.achievement.MapVisitTracker;
 import org.example.achievement.SingleAchievement;
@@ -14,7 +20,6 @@ import org.example.main.GamePanel;
 import org.example.main.KeyHandler;
 import org.example.main.PlayerObserver;
 import org.example.main.input.PlayerInput;
-import org.example.object.*;
 import org.example.object.*;
 import org.example.tile_interactive.InteractiveTile;
 import org.example.visitor.ChopVisitor;
@@ -33,7 +38,15 @@ public class Player extends Entity {
 
     private List<PlayerObserver> observers = new ArrayList<>();
     private final Random combatRandom = new Random();
-    private AchievementCatalog achievementCatalog = new AchievementCatalog();
+    private final Random achievementRandom = new Random();
+    private AchievementGroup achievementRoot;
+    private final Map<Integer, AchievementGroup> mapGroups = new HashMap<>();
+    private final Map<String, CompositeAchievementNode> nodes = new LinkedHashMap<>();
+    private static final List<Template> TEMPLATE_POOL = createTemplatePool();
+    private static final Map<String, Template> TEMPLATE_INDEX = indexTemplates(
+        TEMPLATE_POOL
+    );
+    private int lastTrackedMap = -1;
 
     public Player(GamePanel gp, PlayerInput input) {
         super(gp); // calling constructor of super class(from entity class)
@@ -88,14 +101,73 @@ public class Player extends Entity {
         }
     }
 
-    public AchievementCatalog getAchievementCatalog() {
-        return achievementCatalog;
+    public AchievementGroup getAchievementRoot() {
+        return achievementRoot;
     }
 
     public void resetAchievementProgress() {
-        achievementCatalog = new AchievementCatalog();
         MapKillTracker.reset();
         MapVisitTracker.reset();
+        buildAchievements();
+    }
+
+    private void buildAchievements() {
+        nodes.clear();
+        mapGroups.clear();
+        achievementRoot = new AchievementGroup("All Achievements", "Complete the set");
+
+        AchievementGroup map0 = addMapGroup(0, "Outside", "Starting grounds achievements");
+        AchievementGroup map1 = addMapGroup(1, "Indoor", "House & merchant zone achievements");
+        AchievementGroup map2 = addMapGroup(2, "Dungeon", "Lower-level challenges");
+
+        spawnBaseNodes(0, map0);
+        spawnBaseNodes(1, map1);
+        spawnBaseNodes(2, map2);
+    }
+
+    private AchievementGroup addMapGroup(int mapIndex, String name, String description) {
+        AchievementGroup group = new AchievementGroup(name, description);
+        achievementRoot.add(group);
+        mapGroups.put(mapIndex, group);
+        return group;
+    }
+
+    private void spawnBaseNodes(int mapIndex, AchievementGroup mapGroup) {
+        List<Template> base = new ArrayList<>();
+        for (Template template : TEMPLATE_POOL) {
+            if (template.mapIndex == mapIndex && template.isBase) {
+                base.add(template);
+            }
+        }
+        if (base.isEmpty()) {
+            return;
+        }
+        Collections.shuffle(base, achievementRandom);
+        int count = Math.min(base.size(), achievementRandom.nextInt(3) + 1);
+        for (int i = 0; i < count; i++) {
+            Template pick = base.get(i);
+            CompositeAchievementNode node = createNode(pick);
+            if (!mapGroup.getChildren().contains(node)) {
+                mapGroup.add(node);
+            }
+        }
+    }
+
+    private CompositeAchievementNode createNode(Template template) {
+        CompositeAchievementNode existing = nodes.get(template.id);
+        if (existing != null) {
+            return existing;
+        }
+
+        int required = template.randomRequired(achievementRandom);
+        List<Template> childTemplates = resolveChildTemplates(template);
+        CompositeAchievementNode node = new CompositeAchievementNode(
+            template,
+            required,
+            childTemplates
+        );
+        nodes.put(template.id, node);
+        return node;
     }
 
     public PlayerInput getInput() {
@@ -874,42 +946,78 @@ public class Player extends Entity {
     }
 
     private void trackMapVisit() {
+        resetTrackingIfMapChanged();
         MapVisitTracker.markVisited(gp.currentMap);
         updateVisitAchievements(gp.currentMap);
+    }
+
+    private void resetTrackingIfMapChanged() {
+        if (lastTrackedMap == gp.currentMap) {
+            return;
+        }
+        MapKillTracker.reset();
+        MapVisitTracker.reset();
+        lastTrackedMap = gp.currentMap;
     }
 
     private void updateVisitAchievements(int mapIndex) {
         int area = gp.currentArea;
         if (mapIndex == 0 || area == gp.outside) {
-            setAchievementProgress("map0_visit", 1);
+            recordEvent(EventType.VISIT, 0, 1);
         }
         if (mapIndex == 1 || area == gp.indoor) {
-            setAchievementProgress("map1_visit", 1);
+            recordEvent(EventType.VISIT, 1, 1);
         }
         if (mapIndex == 2 || area == gp.dungeon) {
-            setAchievementProgress("map2_visit", 1);
+            recordEvent(EventType.VISIT, 2, 1);
         }
     }
 
     private void updateKillAchievements(int mapIndex, int killsOnMap) {
         int area = gp.currentArea;
         if (mapIndex == 0 || area == gp.outside) {
-            setAchievementProgress("map0_first_blood", killsOnMap);
-            setAchievementProgress("map0_hunter", killsOnMap);
+            recordEvent(EventType.KILL, 0, killsOnMap);
         }
         if (mapIndex == 1 || area == gp.indoor) {
-            setAchievementProgress("map1_sweeper", killsOnMap);
+            recordEvent(EventType.KILL, 1, killsOnMap);
         }
         if (mapIndex == 2 || area == gp.dungeon) {
-            setAchievementProgress("map2_stalker", killsOnMap);
+            recordEvent(EventType.KILL, 2, killsOnMap);
         }
     }
 
-    private void setAchievementProgress(String key, int value) {
-        Achievement achievement = achievementCatalog.get(key);
-        if (achievement instanceof SingleAchievement single) {
-            single.setProgress(value);
+    private void recordEvent(EventType eventType, int mapIndex, int value) {
+        List<CompositeAchievementNode> snapshot = new ArrayList<>(nodes.values());
+        for (CompositeAchievementNode node : snapshot) {
+            Template template = node.getTemplate();
+            if (!template.matches(eventType, mapIndex)) {
+                continue;
+            }
+            SingleAchievement tracker = node.getTracker();
+            boolean wasAchieved = tracker.isAchieved();
+            tracker.setProgress(value);
+            if (!wasAchieved && tracker.isAchieved()) {
+                node.unlockPendingAchievements(
+                    nodes,
+                    achievementRandom,
+                    this::createNode
+                );
+            }
         }
+    }
+
+    private List<Template> resolveChildTemplates(Template template) {
+        if (template.childIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Template> resolved = new ArrayList<>();
+        for (String id : template.childIds) {
+            Template found = TEMPLATE_INDEX.get(id);
+            if (found != null) {
+                resolved.add(found);
+            }
+        }
+        return resolved;
     }
 
     public void damageMonster(
@@ -1269,5 +1377,184 @@ public class Player extends Entity {
         g2.setColor(Color.red);
         g2.setStroke(new BasicStroke(1));
         g2.drawRect(tempScreenX, tempScreenY, attackArea.width, attackArea.height);*/
+    }
+
+    private enum EventType {
+        VISIT,
+        KILL
+    }
+
+    private static List<Template> createTemplatePool() {
+        List<Template> templates = new ArrayList<>();
+
+        // Map 0 - Outside
+        templates.add(new Template("map0_visit", 0, EventType.VISIT, "First Footing", "Arrive on the Outside map", 5, 1, 1, true, "map0_first_blood", "map0_pathfinder"));
+        templates.add(new Template("map0_first_blood", 0, EventType.KILL, "First Blood (Outside)", "Defeat your first monster outside", 10, 1, 2, true, "map0_hunter", "map0_strider"));
+        templates.add(new Template("map0_hunter", 0, EventType.KILL, "Local Hunter", "Defeat multiple mobs on the Outside map", 15, 3, 5, false, "map0_marksman", "map0_ranger"));
+        templates.add(new Template("map0_marksman", 0, EventType.KILL, "Marksman's Eye", "Keep the outskirts cleared", 20, 6, 9, false, "map0_watch", "map0_legend"));
+        templates.add(new Template("map0_ranger", 0, EventType.KILL, "Ranger of the Cairns", "Stay steady and collect kills", 12, 4, 7, false, "map0_legend"));
+        templates.add(new Template("map0_strider", 0, EventType.KILL, "Border Strider", "Hunt while constantly on the move", 14, 2, 4, false, "map0_watch"));
+        templates.add(new Template("map0_watch", 0, EventType.KILL, "Watchful Ranger", "Intercept ambush parties on the road", 19, 5, 8, false, "map0_legend"));
+        templates.add(new Template("map0_pathfinder", 0, EventType.VISIT, "Trail Pathfinder", "Chart outlying trails and glades", 7, 1, 1, true, "map0_ambusher"));
+        templates.add(new Template("map0_ambusher", 0, EventType.KILL, "Ambush Breaker", "Disrupt sudden raids near villages", 16, 3, 5, false, "map0_clearing"));
+        templates.add(new Template("map0_clearing", 0, EventType.KILL, "Field Clearing", "Hold an open field against waves", 21, 6, 9, false, "map0_legend"));
+        templates.add(new Template("map0_legend", 0, EventType.KILL, "Outside Legend", "Reach legendary kill streaks", 25, 12, 18, false));
+
+        // Map 1 - Indoor
+        templates.add(new Template("map1_visit", 1, EventType.VISIT, "House Guest", "Enter the Indoor map", 5, 1, 1, true, "map1_duet", "map1_scout"));
+        templates.add(new Template("map1_duet", 1, EventType.KILL, "Duet of Shelters", "Work in pairs to take foes down", 8, 2, 3, true, "map1_sweeper", "map1_broker"));
+        templates.add(new Template("map1_sweeper", 1, EventType.KILL, "Hallway Sweeper", "Clear the indoor halls", 15, 5, 7, false, "map1_sentinel", "map1_assault"));
+        templates.add(new Template("map1_sentinel", 1, EventType.KILL, "Indoor Sentinel", "Defeat a wave of indoor foes", 22, 8, 12, false, "map1_reclaimer"));
+        templates.add(new Template("map1_assault", 1, EventType.KILL, "Coordinated Assault", "Strike multiple indoor foes", 16, 6, 9, false, "map1_reclaimer"));
+        templates.add(new Template("map1_reclaimer", 1, EventType.KILL, "Guild Reclaimer", "Earn dominance inside", 28, 14, 18, false));
+        templates.add(new Template("map1_scout", 1, EventType.VISIT, "Gallery Scout", "Peek into service hallways", 6, 1, 1, true, "map1_suppressor"));
+        templates.add(new Template("map1_suppressor", 1, EventType.KILL, "Suppressing Sweep", "Shut down covert rooms", 18, 4, 6, false, "map1_veteran"));
+        templates.add(new Template("map1_veteran", 1, EventType.KILL, "Hall Veteran", "Hold corridors under pressure", 26, 9, 12, false, "map1_reclaimer"));
+        templates.add(new Template("map1_broker", 1, EventType.KILL, "Market Broker", "Protect the merchant floor", 12, 3, 4, false, "map1_curator"));
+        templates.add(new Template("map1_curator", 1, EventType.KILL, "Relic Curator", "Guard the relic gallery exhibits", 20, 6, 9, false, "map1_guardian"));
+
+        // Map 2 - Dungeon
+        templates.add(new Template("map2_visit", 2, EventType.VISIT, "Into the Depths", "Enter the Dungeon map", 10, 1, 1, true, "map2_stalker", "map2_pathfinder"));
+        templates.add(new Template("map2_stalker", 2, EventType.KILL, "Dungeon Stalker", "Hunt Dungeon denizens", 25, 8, 11, true, "map2_dredger", "map2_enforcer"));
+        templates.add(new Template("map2_dredger", 2, EventType.KILL, "Dungeon Dredger", "Clear deep-level foes", 30, 16, 20, false, "map2_depth_seeker", "map2_juggernaut"));
+        templates.add(new Template("map2_depth_seeker", 2, EventType.KILL, "Depth Seeker", "Reach legendary dungeon kills", 40, 22, 28, false));
+        templates.add(new Template("map2_pathfinder", 2, EventType.VISIT, "Lower Pathfinder", "Scout the lower antechambers", 14, 1, 1, true, "map2_sentry"));
+        templates.add(new Template("map2_sentry", 2, EventType.KILL, "Sentry Subverter", "Disable dungeon sentries", 28, 10, 14, false, "map2_cleanser"));
+        templates.add(new Template("map2_enforcer", 2, EventType.KILL, "Depth Enforcer", "Eliminate elite packs", 32, 14, 18, false, "map2_depth_seeker"));
+        templates.add(new Template("map2_juggernaut", 2, EventType.KILL, "Juggernaut of Gloom", "Endure a long assault underground", 36, 18, 22, false, "map2_overlord"));
+
+        // Extra achievements per map (extendable without changing logic)
+        templates.add(new Template("map0_cleanup", 0, EventType.KILL, "Outskirts Cleanup", "Keep outside clear of stragglers", 18, 7, 10, false, "map0_cull"));
+        templates.add(new Template("map0_cull", 0, EventType.KILL, "Cairn Cull", "Drive back lingering threats", 22, 10, 14, false, "map0_purifier"));
+        templates.add(new Template("map0_purifier", 0, EventType.KILL, "Purifier of Paths", "Hold the line in the outskirts", 28, 14, 18, false));
+
+        templates.add(new Template("map1_patrol", 1, EventType.KILL, "Hall Patrol", "Secure the halls from intruders", 18, 4, 6, false, "map1_wiper"));
+        templates.add(new Template("map1_wiper", 1, EventType.KILL, "Corridor Wiper", "Sweep consecutive foes indoors", 24, 7, 10, false, "map1_guardian"));
+        templates.add(new Template("map1_guardian", 1, EventType.KILL, "Hall Guardian", "Maintain control of the corridors", 30, 11, 15, false));
+
+        templates.add(new Template("map2_scout", 2, EventType.VISIT, "Depths Scout", "Chart more of the dungeon routes", 12, 1, 1, false, "map2_cleanser"));
+        templates.add(new Template("map2_cleanser", 2, EventType.KILL, "Depths Cleanser", "Stabilize the upper depths", 26, 9, 13, false, "map2_overlord"));
+        templates.add(new Template("map2_overlord", 2, EventType.KILL, "Depth Overlord", "Command the deepest paths", 45, 26, 32, false));
+
+        return templates;
+    }
+    private static Map<String, Template> indexTemplates(List<Template> pool) {
+        Map<String, Template> map = new HashMap<>();
+        for (Template template : pool) {
+            map.put(template.id, template);
+        }
+        return map;
+    }
+
+    private static final class Template {
+        private final String id;
+        private final int mapIndex;
+        private final EventType eventType;
+        private final String name;
+        private final String description;
+        private final int points;
+        private final int minRequired;
+        private final int maxRequired;
+        private final boolean isBase;
+        private final List<String> childIds;
+
+        private Template(
+            String id,
+            int mapIndex,
+            EventType eventType,
+            String name,
+            String description,
+            int points,
+            int minRequired,
+            int maxRequired,
+            boolean isBase,
+            String... childIds
+        ) {
+            this.id = id;
+            this.mapIndex = mapIndex;
+            this.eventType = eventType;
+            this.name = name;
+            this.description = description;
+            this.points = points;
+            this.minRequired = minRequired;
+            this.maxRequired = maxRequired;
+            this.isBase = isBase;
+            this.childIds = Collections.unmodifiableList(
+                Arrays.asList(childIds)
+            );
+        }
+
+        private int randomRequired(Random random) {
+            int min = Math.max(1, minRequired);
+            int max = Math.max(min, maxRequired);
+            return min + random.nextInt(max - min + 1);
+        }
+
+        private boolean matches(EventType eventType, int mapIndex) {
+            return this.eventType == eventType && this.mapIndex == mapIndex;
+        }
+    }
+
+    private static final class CompositeAchievementNode extends AchievementGroup {
+        private final Template template;
+        private final SingleAchievement tracker;
+        private final List<Template> pendingChildTemplates;
+
+        private CompositeAchievementNode(
+            Template template,
+            int required,
+            List<Template> pendingChildTemplates
+        ) {
+            super(template.name, template.description);
+            this.template = template;
+            this.tracker = new SingleAchievement(
+                template.name,
+                template.description,
+                template.points,
+                required
+            );
+            this.pendingChildTemplates = new ArrayList<>(pendingChildTemplates);
+            super.add(tracker);
+        }
+
+        private Template getTemplate() {
+            return template;
+        }
+
+        private SingleAchievement getTracker() {
+            return tracker;
+        }
+
+        private void unlockPendingAchievements(
+            Map<String, CompositeAchievementNode> activeNodes,
+            Random random,
+            Function<Template, CompositeAchievementNode> factory
+        ) {
+            if (pendingChildTemplates.isEmpty()) {
+                return;
+            }
+
+            List<Template> candidates = new ArrayList<>();
+            for (Template childTemplate : pendingChildTemplates) {
+                if (!activeNodes.containsKey(childTemplate.id)) {
+                    candidates.add(childTemplate);
+                }
+            }
+            if (candidates.isEmpty()) {
+                return;
+            }
+
+            Collections.shuffle(candidates, random);
+            int maxAdds = Math.max(1, Math.min(3, candidates.size()));
+            int addCount = 1 + random.nextInt(maxAdds);
+
+            for (int i = 0; i < addCount; i++) {
+                Template pick = candidates.get(i);
+                CompositeAchievementNode childNode = factory.apply(pick);
+                if (!getChildren().contains(childNode)) {
+                    add(childNode);
+                }
+            }
+        }
     }
 }

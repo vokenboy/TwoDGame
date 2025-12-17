@@ -1,10 +1,15 @@
 package org.example.achievement;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public abstract class Achievement {
     protected String name;
     protected String description;
     protected int points;
     protected boolean achieved;
+    protected final List<Achievement> children = new ArrayList<>();
 
     public Achievement(String name, String description, int points) {
         this.name = name;
@@ -27,6 +32,10 @@ public abstract class Achievement {
 
     public boolean isAchieved() {
         return achieved;
+    }
+
+    public List<Achievement> getChildren() {
+        return Collections.unmodifiableList(children);
     }
 
     public abstract void checkProgress();

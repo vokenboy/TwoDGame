@@ -12,6 +12,8 @@ import org.example.commands.MoveUpCommand;
 
 public class KeyHandler extends KeyAdapter {
 
+    private static final int ACHIEVEMENT_SCROLL_STEP = 32;
+
     private final Command attackCommand = new AttackCommand();
     private final Command castSpellCommand = new CastSpellCommand();
     private final Command moveUpCommand = new MoveUpCommand();
@@ -316,7 +318,10 @@ public class KeyHandler extends KeyAdapter {
         if (justPressed(characterPressed, prevCharacter)) gp.gameState =
             gp.characterState;
         if (justPressed(mapPressed, prevMap)) gp.gameState = gp.mapState;
-        if (achievementsToggle) gp.gameState = gp.achievementsState;
+        if (achievementsToggle) {
+            gp.ui.resetAchievementsScroll();
+            gp.gameState = gp.achievementsState;
+        }
         if (justPressed(escapePressed, prevEscape)) gp.gameState =
             gp.optionsState;
 
@@ -499,6 +504,12 @@ public class KeyHandler extends KeyAdapter {
         boolean achievementsToggle,
         boolean escapePressed
     ) {
+        boolean up = justPressed(upPressed, prevUp);
+        boolean down = justPressed(downPressed, prevDown);
+
+        if (up) gp.ui.scrollAchievements(ACHIEVEMENT_SCROLL_STEP);
+        if (down) gp.ui.scrollAchievements(-ACHIEVEMENT_SCROLL_STEP);
+
         if (achievementsToggle || justPressed(escapePressed, prevEscape)) {
             gp.gameState = gp.playState;
         }

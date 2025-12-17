@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import org.example.achievement.Achievement;
-import org.example.achievement.AchievementGroup;
 import org.example.achievement.SingleAchievement;
 import org.example.entity.Entity;
 import org.example.entity.Entity;
+import org.example.achievement.AchievementGroup;
 import org.example.entity.decorator.ElementalDecorator;
 import org.example.entity.decorator.ElementalDecorator;
 import org.example.entity.decorator.EquipmentBuilder;
@@ -35,6 +35,9 @@ public class UI {
     public boolean gameFinished = false;
     public String currentDialogue = "";
     public int commandNum = 0;
+    private int achievementsScrollY = 0;
+    private int achievementsMaxScroll = 0;
+    private static final int ACHIEVEMENT_SCROLL_STEP = 32;
     public int titleScreenState = 0; // 0 : Main Menu, 1 : the second screen
     //Player Inventory
     public int playerSlotCol = 0;
@@ -1821,23 +1824,38 @@ public class UI {
         g2.drawString(hint, hintX, textY);
 
         textY += gp.tileSize;
-        AchievementGroup root = gp.player.getAchievementCatalog().getRoot();
+        AchievementGroup root = gp.player.getAchievementRoot();
         int lineHeight = 26;
         int maxY = frameY + frameHeight - gp.tileSize;
+
+        // Measure total content height to clamp scroll and enable full traversal
+        int contentHeight = 0;
         java.util.List<Achievement> sections = selectVisibleAchievementSections(
             root
         );
         for (Achievement section : sections) {
-            textY =
+            contentHeight += measureAchievementNodeHeight(
+                section,
+                lineHeight,
+                0
+            );
+        }
+        int visibleHeight = maxY - textY;
+        achievementsMaxScroll = Math.max(0, contentHeight - visibleHeight);
+        achievementsScrollY = clampScroll(achievementsScrollY);
+
+        int startY = textY + achievementsScrollY;
+        for (Achievement section : sections) {
+            startY =
                 drawAchievementNode(
                     section,
                     textX,
-                    textY,
+                    startY,
                     lineHeight,
                     0,
                     maxY
                 );
-            if (textY > maxY) {
+            if (startY > maxY) {
                 break;
             }
         }
@@ -1851,36 +1869,68 @@ public class UI {
         int depth,
         int maxY
     ) {
-        int x = baseX + depth * 20;
+        int x = baseX; // single column, no indentation
         if (startY > maxY) {
             return startY;
         }
 
         if (achievement instanceof AchievementGroup group) {
             int total = group.getChildren().size();
-            int achieved = 0;
-            for (Achievement child : group.getChildren()) {
-                if (child.isAchieved()) {
-                    achieved++;
+
+            // Composite nodes carry a tracker as first child; show its progress in the header.
+            boolean compositeWithTracker =
+                total > 0 && group.getChildren().get(0) instanceof SingleAchievement;
+            SingleAchievement tracker = compositeWithTracker
+                ? (SingleAchievement) group.getChildren().get(0)
+                : null;
+
+            // If this group and its tracker are already achieved and no visible children, skip rendering it
+            List<Achievement> children = group.getChildren();
+
+            boolean trackerAchieved = tracker != null && tracker.isAchieved();
+            boolean hasVisibleChildren = false;
+            for (int idx = compositeWithTracker ? 1 : 0; idx < children.size(); idx++) {
+                if (!children.get(idx).isAchieved()) {
+                    hasVisibleChildren = true;
+                    break;
                 }
             }
+            if (trackerAchieved && !hasVisibleChildren) {
+                return startY;
+            }
+
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 22F));
             g2.setColor(
                 group.isAchieved() ? new Color(120, 210, 120) : Color.white
             );
-            g2.drawString(
-                group.getName() + " (" + achieved + "/" + total + ")",
-                x,
-                startY
-            );
+
+            String header = group.getName();
+            if (tracker != null && !trackerAchieved) {
+                String progress = tracker.getProgress() + "/" + tracker.getRequired();
+                String status = tracker.isAchieved() ? "✓" : "…";
+                header += " [" + progress + "] " + status;
+            }
+
+            g2.drawString(header, x, startY);
             startY += lineHeight;
-            for (Achievement child : group.getChildren()) {
+
+            // Show composite description beneath header to give context
+            if (tracker != null && !trackerAchieved) {
+                g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 16F));
+                g2.setColor(new Color(200, 200, 200));
+                g2.drawString(tracker.getDescription(), x, startY);
+                startY += lineHeight;
+            }
+
+            int startIndex = compositeWithTracker ? 1 : 0; // skip tracker when already shown in header
+            for (int idx = startIndex; idx < children.size(); idx++) {
+                Achievement child = children.get(idx);
                 startY = drawAchievementNode(
                     child,
                     baseX,
                     startY,
                     lineHeight,
-                    depth + 1,
+                    0,
                     maxY
                 );
                 if (startY > maxY) {
@@ -1891,6 +1941,9 @@ public class UI {
         }
 
         if (achievement instanceof SingleAchievement single) {
+            if (single.isAchieved()) {
+                return startY; // hide completed singles to remove old entries
+            }
             g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 20F));
             boolean done = single.isAchieved();
             g2.setColor(done ? new Color(120, 210, 120) : Color.lightGray);
@@ -1904,10 +1957,76 @@ public class UI {
             startY += 20;
             g2.setFont(g2.getFont().deriveFont(Font.PLAIN, 16F));
             g2.setColor(new Color(200, 200, 200));
-            g2.drawString(single.getDescription(), x + 6, startY);
+            g2.drawString(single.getDescription(), x, startY);
             startY += lineHeight;
         }
         return startY;
+    }
+
+    private int measureAchievementNodeHeight(
+        Achievement achievement,
+        int lineHeight,
+        int depth
+    ) {
+        if (achievement instanceof AchievementGroup group) {
+            int total = group.getChildren().size();
+            boolean compositeWithTracker =
+                total > 0 && group.getChildren().get(0) instanceof SingleAchievement;
+            int startIndex = compositeWithTracker ? 1 : 0;
+
+            SingleAchievement tracker = compositeWithTracker
+                ? (SingleAchievement) group.getChildren().get(0)
+                : null;
+            boolean trackerAchieved = tracker != null && tracker.isAchieved();
+
+            boolean hasVisibleChildren = false;
+            for (int idx = startIndex; idx < total; idx++) {
+                Achievement child = group.getChildren().get(idx);
+                if (!child.isAchieved()) {
+                    hasVisibleChildren = true;
+                    break;
+                }
+            }
+            if (trackerAchieved && !hasVisibleChildren) {
+                return 0; // skip entirely
+            }
+
+            int height = lineHeight; // header line
+            if (compositeWithTracker && !trackerAchieved) {
+                height += lineHeight; // description line under header
+            }
+            for (int idx = startIndex; idx < total; idx++) {
+                Achievement child = group.getChildren().get(idx);
+                height += measureAchievementNodeHeight(child, lineHeight, depth + 1);
+            }
+            return height;
+        }
+
+        if (achievement instanceof SingleAchievement) {
+            if (((SingleAchievement) achievement).isAchieved()) {
+                return 0; // hide completed singles
+            }
+            // Matches drawAchievementNode spacing for singles: main line + description lineHeight
+            return 20 + lineHeight;
+        }
+
+        return lineHeight;
+    }
+
+    private int clampScroll(int scroll) {
+        int min = -achievementsMaxScroll;
+        int max = 0;
+        if (scroll < min) return min;
+        if (scroll > max) return max;
+        return scroll;
+    }
+
+    public void scrollAchievements(int delta) {
+        achievementsScrollY = clampScroll(achievementsScrollY + delta);
+    }
+
+    public void resetAchievementsScroll() {
+        achievementsScrollY = 0;
     }
 
     private java.util.List<Achievement> selectVisibleAchievementSections(
